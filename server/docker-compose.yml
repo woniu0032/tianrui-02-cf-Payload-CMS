@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  payload:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - PAYLOAD_PUBLIC_SERVER_URL=${PAYLOAD_PUBLIC_SERVER_URL}
+    volumes:
+      - ./uploads:/app/uploads
+    restart: unless-stopped

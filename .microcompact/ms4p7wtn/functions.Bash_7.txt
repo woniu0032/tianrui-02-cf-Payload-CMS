@@ -1,0 +1,1 @@
+{"exitCode":0,"output":"total 20\ndrwxr-xr-x 4 root root 4096 Jul 28 20:33 .\ndrwxr-xr-x 4 root root 4096 Jul 28 20:33 ..\n-rw-r--r-- 1 root root 2968 Jul 28 20:33 index.ts\ndrwxr-xr-x 2 root root 4096 Jul 28 20:33 routes\ndrwxr-xr-x 2 root root 4096 Jul 28 20:33 utils"}

@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  payload:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tianrui-payload
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - PAYLOAD_PUBLIC_SERVER_URL=${PAYLOAD_PUBLIC_SERVER_URL:-http://localhost:8080}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - CSRF_ORIGINS=${CSRF_ORIGINS}
+    volumes:
+      - ./uploads:/app/uploads
+      - /var/log/tianrui-payload:/app/logs
+    networks:
+      - tianrui-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 可选：使用 Nginx 作为反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: tianrui-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./uploads:/var/www/uploads:ro
+    depends_on:
+      - payload
+    networks:
+      - tianrui-network
+
+networks:
+  tianrui-network:
+    driver: bridge

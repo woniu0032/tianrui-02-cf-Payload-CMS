@@ -1,0 +1,416 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useLanguage } from '../contexts/LanguageContext';
+import { supabase } from '../supabase/client';
+import { ArrowLeft, ShoppingCart, FileText, ChevronLeft, ChevronRight, Shield, Flame, Droplets, Zap } from 'lucide-react';
+
+interface ProductSpec {
+  label: string;
+  labelEn: string;
+  value: string;
+  valueEn?: string;
+}
+
+interface ProductImage {
+  url: string;
+  type: 'main' | 'detail';
+}
+
+interface ProductData {
+  id: string;
+  name: string;
+  nameEn: string;
+  description: string;
+  descriptionEn: string;
+  image: string;
+  images: ProductImage[];
+  specs: ProductSpec[];
+  features: string[];
+  featuresEn: string[];
+  category: string;
+  categoryEn: string;
+}
+
+const staticProducts = [
+  { id: '1', name: '阻燃工装面料', nameEn: 'Flame Retardant Workwear Fabric', category: 'fireproof', desc: '采用先进阻燃技术', descEn: 'Advanced flame retardant technology', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600' },
+  { id: '2', name: '防水透气面料', nameEn: 'Waterproof Breathable Fabric', category: 'waterproof', desc: '三层复合结构', descEn: '3-layer composite', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600' },
+  { id: '3', name: '抗静电面料', nameEn: 'Antistatic Fabric', category: 'antistatic', desc: '永久性抗静电处理', descEn: 'Permanent antistatic', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600' },
+];
+
+export default function ProductDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { language, t } = useLanguage();
+  const isZh = language === 'zh';
+
+  const [product, setProduct] = useState<ProductData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [related, setRelated] = useState<any[]>([]);
+
+  // 从数据库获取产品详情
+  useEffect(() => {
+    async function fetchProduct() {
+      if (!id) return;
+      
+      try {
+        // 尝试从数据库获取
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', id)
+          .eq('is_active', true)
+          .single();
+
+        if (error) {
+          console.log('数据库查询失败，使用静态数据');
+          // 使用静态数据
+          const staticProduct = staticProducts.find(p => p.id === id) || staticProducts[0];
+          setProduct({
+            id: staticProduct.id,
+            name: staticProduct.name,
+            nameEn: staticProduct.nameEn,
+            description: staticProduct.desc,
+            descriptionEn: staticProduct.descEn,
+            image: staticProduct.image,
+            images: [{ url: staticProduct.image, type: 'main' }],
+            specs: [
+              { label: '成分', labelEn: 'Composition', value: '100% Polyester' },
+              { label: '克重', labelEn: 'Weight', value: '180-220g/m²' },
+              { label: '幅宽', labelEn: 'Width', value: '150cm' },
+              { label: '认证', labelEn: 'Certification', value: 'ISO, OEKO-TEX' },
+            ],
+            features: ['阻燃', '耐高温', '环保'],
+            featuresEn: ['Flame Retardant', 'High Temp', 'Eco-friendly'],
+            category: '阻燃面料',
+            categoryEn: 'Flame Retardant',
+          });
+        } else if (data) {
+          // 解析数据库产品数据
+          const specs = (data.specifications as Record<string, any>) || {};
+          const images: ProductImage[] = specs.images || [{ url: data.image_url || '', type: 'main' }];
+
+          setProduct({
+            id: data.id,
+            name: data.name,
+            nameEn: data.name_en || data.name,
+            description: data.description || '',
+            descriptionEn: data.description_en || data.description || '',
+            image: data.image_url || '',
+            images: images,
+            specs: [
+              { label: '成分', labelEn: 'Composition', value: specs.composition || '88%棉 + 12%锦纶', valueEn: specs.composition_en },
+              { label: '克重', labelEn: 'Weight', value: specs.weight || '245 GSM', valueEn: specs.weight_en },
+              { label: '颜色', labelEn: 'Color', value: specs.color || '深蓝色', valueEn: specs.color_en },
+              { label: '型号', labelEn: 'Model', value: specs.model || '-', valueEn: specs.model },
+              { label: '应用', labelEn: 'Application', value: specs.application || '阻燃工作服', valueEn: specs.application_en },
+            ],
+            features: specs.features || ['阻燃', '防油', '防水', '防静电'],
+            featuresEn: specs.features_en || ['Flame Retardant', 'Oil Resistant', 'Waterproof', 'Anti-static'],
+            category: data.category,
+            categoryEn: data.category,
+          });
+
+          // 获取相关产品
+          const { data: relatedData } = await supabase
+            .from('products')
+            .select('*')
+            .eq('category', data.category)
+            .eq('is_active', true)
+            .neq('id', id)
+            .limit(3);
+
+          if (relatedData) {
+            setRelated(relatedData.map(item => ({
+              id: item.id,
+              name: item.name,
+              nameEn: item.name_en || item.name,
+              image: item.image_url,
+            })));
+          }
+        }
+      } catch (err) {
+        console.error('获取产品出错:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProduct();
+  }, [id]);
+
+  // 如果没有相关产品，使用静态数据
+  const displayRelated = related.length > 0 ? related : staticProducts.filter(p => p.id !== id).slice(0, 3);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
+        <div className="text-center">
+        <p className="text-gray-500">{t('productDetail.notFound')}</p>
+        <button onClick={() => navigate('/products')} className="mt-4 text-blue-600 hover:underline">
+          {t('productDetail.backToProducts')}
+        </button>
+        </div>
+      </div>
+    );
+  }
+
+  const allImages = product.images.length > 0 ? product.images : [{ url: product.image, type: 'main' }];
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-20">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* 返回按钮 */}
+        <motion.button 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => navigate('/products')} 
+          className="flex items-center text-blue-600 mb-6 hover:text-blue-800 transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
+          {t('productDetail.backToProducts')}
+        </motion.button>
+
+        {/* 主产品展示区域 */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl shadow-xl overflow-hidden"
+        >
+          <div className="grid lg:grid-cols-2 gap-0">
+            {/* 左侧：图片展示 */}
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-8 lg:p-12">
+              {/* 主图 */}
+              <motion.div 
+                className="relative aspect-square mb-6 bg-white rounded-xl shadow-lg overflow-hidden"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <img 
+                  src={allImages[currentImageIndex]?.url || product.image} 
+                  alt={isZh ? product.name : product.nameEn} 
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* 图片切换按钮 */}
+                {allImages.length > 1 && (
+                  <>
+                    <button 
+                      onClick={prevImage}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5 text-gray-700" />
+                    </button>
+                    <button 
+                      onClick={nextImage}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5 text-gray-700" />
+                    </button>
+                  </>
+                )}
+
+                {/* 图片指示器 */}
+                {allImages.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    {allImages.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          idx === currentImageIndex ? 'bg-blue-600 w-6' : 'bg-gray-400'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* 产品标签 */}
+                <div className="absolute top-4 left-4 flex gap-2">
+                  <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
+                    {isZh ? product.category : product.categoryEn}
+                  </span>
+                  <span className="px-3 py-1 bg-amber-500 text-white text-sm font-medium rounded-full flex items-center gap-1">
+                    <Flame className="w-3 h-3" />
+                    {t('productDetail.flameRetardant')}
+                  </span>
+                </div>
+              </motion.div>
+
+              {/* 缩略图 */}
+              {allImages.length > 1 && (
+                <div className="flex gap-3 justify-center">
+                  {allImages.map((img, idx) => (
+                    <motion.button
+                      key={idx}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setCurrentImageIndex(idx)}
+                      className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                        idx === currentImageIndex ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <img 
+                        src={img.url} 
+                        alt={`${isZh ? product.name : product.nameEn} ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </motion.button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 右侧：产品信息 */}
+            <div className="p-8 lg:p-12 space-y-6">
+              {/* 标题区域 */}
+              <div>
+                <motion.h1 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-3xl lg:text-4xl font-bold text-slate-900 mb-3"
+                >
+                  {isZh ? product.name : product.nameEn}
+                </motion.h1>
+                <motion.p 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-slate-600 text-lg leading-relaxed"
+                >
+                  {isZh ? product.description : product.descriptionEn}
+                </motion.p>
+              </div>
+
+              {/* 功能特性标签 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-wrap gap-2"
+              >
+                {(isZh ? product.features : product.featuresEn).map((feature, i) => (
+                  <span 
+                    key={i}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100 flex items-center gap-1"
+                  >
+                    {feature.includes('阻燃') || feature.includes('Flame') ? <Flame className="w-3 h-3" /> :
+                     feature.includes('防水') || feature.includes('Water') ? <Droplets className="w-3 h-3" /> :
+                     feature.includes('静电') || feature.includes('Static') ? <Zap className="w-3 h-3" /> :
+                     <Shield className="w-3 h-3" />}
+                    {feature}
+                  </span>
+                ))}
+              </motion.div>
+
+              {/* 产品参数 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-slate-50 rounded-xl p-6 border border-slate-100"
+              >
+                <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  <span className="w-1 h-5 bg-blue-600 rounded-full"></span>
+                  {t('productDetail.specs')}
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {product.specs.map((spec, i) => (
+                    <div key={i} className="bg-white rounded-lg p-3 border border-slate-100">
+                      <span className="text-slate-500 text-sm">{isZh ? spec.label : spec.labelEn}</span>
+                      <p className="font-semibold text-slate-900 mt-1">{spec.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* 操作按钮 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="flex gap-4 pt-4"
+              >
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate('/inquiry')} 
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  {t('products.inquiryNow')}
+                </motion.button>
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-8 border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:border-blue-300 hover:bg-blue-50 transition-all flex items-center gap-2"
+                >
+                  <FileText className="w-5 h-5" />
+                  {t('products.download')}
+                </motion.button>
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* 相关产品 */}
+        {displayRelated.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-16"
+          >
+            <div className="flex items-center gap-3 mb-8">
+              <span className="w-1 h-6 bg-blue-600 rounded-full"></span>
+              <h2 className="text-2xl font-bold text-slate-900">{t('productDetail.relatedProducts')}</h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              {displayRelated.map((item, i) => (
+                <motion.div 
+                  key={item.id} 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 + i * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  onClick={() => navigate(`/products/${item.id}`)} 
+                  className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-xl transition-all border border-slate-100"
+                >
+                  <div className="aspect-video overflow-hidden bg-slate-100">
+                    <img 
+                      src={item.image} 
+                      alt={isZh ? item.name : item.nameEn} 
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-semibold text-slate-900 text-lg">{isZh ? item.name : item.nameEn}</h3>
+                    <p className="text-blue-600 text-sm mt-2 font-medium">{t('products.viewDetails')}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+}

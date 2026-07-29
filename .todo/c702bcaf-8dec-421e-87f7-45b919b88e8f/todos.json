@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "content": "修改前端 API 配置指向境外云服务器",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "content": "配置前端静态文件打包输出",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "content": "创建 Cloudflare Pages 部署配置",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "content": "更新后端 CORS 配置允许 Cloudflare 域名",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "5",
+    "content": "创建后端部署脚本和配置",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "6",
+    "content": "编写完整部署文档",
+    "status": "completed",
+    "priority": "high"
+  }
+]

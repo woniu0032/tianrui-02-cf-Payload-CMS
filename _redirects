@@ -1,0 +1,3 @@
+# Cloudflare Pages 重定向规则
+# 所有路由都指向 index.html（支持前端路由）
+/* /index.html 200
