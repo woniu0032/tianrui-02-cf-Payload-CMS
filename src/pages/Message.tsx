@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
-import { supabase } from '../supabase/client';
+import { submitForm } from '../services/api';
 
 export default function Message() {
   const { t, language } = useLanguage();
@@ -36,20 +36,26 @@ export default function Message() {
 
     setLoading(true);
 
-    const { error } = await supabase.from('messages').insert({
-      name: formData.name,
-      company: formData.company,
-      email: formData.email,
-      phone: formData.phone,
-      content: formData.message
-    });
+    try {
+      await submitForm({
+        formType: 'message',
+        data: {
+          name: formData.name,
+          company: formData.company,
+          email: formData.email,
+          phone: formData.phone,
+          content: formData.message
+        }
+      });
 
-    setLoading(false);
-
-    if (!error) {
       setSubmitted(true);
       setFormData({ name: '', company: '', email: '', phone: '', message: '' });
       setTimeout(() => setSubmitted(false), 3000);
+    } catch (error) {
+      console.error('Failed to submit message:', error);
+      alert('提交失败，请重试');
+    } finally {
+      setLoading(false);
     }
   };
 

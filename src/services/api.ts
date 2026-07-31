@@ -2,7 +2,7 @@
 // 生产环境使用境外云服务器地址，开发环境使用 localhost
 const API_BASE_URL = (typeof process !== 'undefined' && process.env?.VITE_API_URL)
   || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
-  || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://api.tianrui-textile.com');
+  || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://api.hyfsad.com');
 
 // 获取存储的 token
 const getToken = () => localStorage.getItem('admin_token');

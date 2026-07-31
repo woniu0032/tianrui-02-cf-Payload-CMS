@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { X, ChevronRight, Flame, Droplets, Shield, Zap, HeartPulse, Layers, Move, Sun, Palette, Leaf, CircleDot } from 'lucide-react';
-import { supabase } from '../supabase/client';
+import { fetchProducts } from '../services/api';
 
 interface FabricMaterial {
   id: string;
@@ -325,35 +325,28 @@ export default function Products() {
     // 注意：保留 selectedMaterial 和 activeCategory，因为用户可能从首页直接跳转到特定分类
   }, [location.pathname]);
 
-  // 从数据库获取芳纶产品
+  // 从 Payload CMS 获取芳纶产品
   useEffect(() => {
     async function fetchAramidProducts() {
       try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('category', '芳纶')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
+        const response = await fetchProducts({
+          category: '芳纶',
+          limit: 100,
+        });
 
-        if (error) {
-          console.error('获取芳纶产品失败:', error);
-          return;
-        }
-
-        if (data) {
-          const formattedProducts: Product[] = data.map(item => ({
+        if (response.data) {
+          const formattedProducts: Product[] = response.data.map((item: any) => ({
             id: item.id,
             name: item.name,
-            nameEn: item.name_en || item.name,
-            image: item.image_url || 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400',
+            nameEn: item.nameEn || item.name,
+            image: item.images?.[0]?.image?.url || item.coverImage?.url || 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400',
             description: item.description || '',
-            descriptionEn: item.description_en || item.description || '',
+            descriptionEn: item.descriptionEn || item.description || '',
           }));
           setAramidProducts(formattedProducts);
         }
       } catch (err) {
-        console.error('获取产品出错:', err);
+        console.error('获取芳纶产品失败:', err);
       } finally {
         setLoading(false);
       }
