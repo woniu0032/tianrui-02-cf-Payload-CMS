@@ -19,13 +19,8 @@ export const Users: CollectionConfig = {
     },
     {
       name: 'role',
-      type: 'select',
+      type: 'text',
       label: '角色',
-      options: [
-        { label: '管理员', value: 'admin' },
-        { label: '编辑', value: 'editor' },
-        { label: '客服', value: 'support' },
-      ],
       defaultValue: 'editor',
       required: true,
     },
