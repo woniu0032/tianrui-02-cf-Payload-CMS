@@ -43,7 +43,7 @@ step_system_update() {
 # ==================== 步骤 2: 安装 Node.js ====================
 step_install_nodejs() {
     log_step "步骤 2/9: 安装 Node.js ${NODE_VERSION}"
-    
+
     if command -v node &> /dev/null; then
         NODE_VER=$(node -v)
         log_warn "Node.js 已安装: $NODE_VER"
@@ -53,10 +53,20 @@ step_install_nodejs() {
             return
         fi
     fi
-    
-    curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | sudo -E bash -
+
+    # Ubuntu 24.04 使用 nodesource 官方脚本
+    curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | sudo -E bash - || {
+        # 如果失败，尝试备用方法
+        log_warn "nodesource 安装失败，使用备用方法..."
+        sudo apt install -y ca-certificates curl gnupg
+        sudo mkdir -p /etc/apt/keyrings
+        curl -fsSL https://deb.nodesource.com/gpgkey | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+        echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_VERSION}.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+        sudo apt update
+    }
+
     sudo apt install -y nodejs
-    
+
     log_info "✅ Node.js $(node -v) 安装完成"
 }
 

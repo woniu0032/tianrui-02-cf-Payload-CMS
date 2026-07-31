@@ -56,16 +56,28 @@ server/
 - **Images**: Payload handles resizing (thumbnail, card, tablet)
 - **WebSocket**: Chat uses polling fallback (Payload doesn't include WS)
 - **Deployment**: Frontend on Cloudflare Pages, Backend on境外云服务器
-- **API URL**: Production uses `https://api.tianrui-textile.com`
+- **API URL**: Production uses `https://api.hyfsad.com`
+- **Admin Login**: `admin@tianrui.com` / `admin123` at `/admin`
+- **Server IP**: `47.80.28.104` (Ubuntu 24.04)
+- **Process Manager**: PM2 with ecosystem.config.js
+- **Reverse Proxy**: Nginx on port 80 → localhost:8080
+- **SSL**: Cloudflare Flexible mode (HTTPS browser→Cloudflare, HTTP Cloudflare→server)
 
 ## What Didn't Work
 
 - ❌ Direct Prisma queries from frontend → Switched to Payload REST API
 - ❌ WebSocket for real-time chat → Using polling in AdminChat
 - ❌ File upload via custom endpoint → Using Payload Media collection
+- ❌ `payload serve` command → Payload v3 doesn't have this command, created custom `src/server.ts`
+- ❌ PostgreSQL `select` fields create enum types → Changed all `select` to `text` type to avoid conflicts
+- ❌ `push: false` prevented table creation → Used `push: true` for initial schema sync
+- ❌ Database had stale data → Dropped and recreated database to start fresh
 
 ## Lessons
 
 - Payload's `beforeChange` hooks auto-set publishedAt
 - Image URLs need transformation: `image.url` vs direct string
 - API response format: `{ docs: [], totalDocs, page, totalPages }`
+- Always drop/recreate database when encountering enum conflicts during migration
+- Use `text` type instead of `select` for simple dropdowns to avoid PostgreSQL enum issues
+- Cloudflare SSL must be set to "Flexible" when server only has HTTP (no SSL cert)
