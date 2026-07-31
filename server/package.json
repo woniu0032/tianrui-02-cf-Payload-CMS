@@ -8,7 +8,7 @@
     "build": "payload generate:types",
     "dev": "payload dev",
     "payload": "payload",
-    "start": "payload serve",
+    "start": "tsx src/server.ts",
     "generate:types": "payload generate:types",
     "seed": "tsx scripts/seed.ts",
     "migrate": "payload migrate",
