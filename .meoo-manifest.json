@@ -1,10 +1,10 @@
 {
   "version": 1,
   "platform": "meoo",
-  "exportDate": "2026-07-29T02:47:33.213Z",
+  "exportDate": "2026-07-31T01:06:02.977Z",
   "projectType": "create-desktop",
   "framework": "react",
   "builder": "webpack",
   "sourceProjectId": "zwylp8lv7nyl",
-  "signature": "ed227f44da2c3aed179853144be7de34c7fedfa94e5d38fc9dd6df41d13e713d"
+  "signature": "257dbb52de0b78f52e5354c1121fb5b5aafc3dff84696f0870e1b93a3ad5412b"
 }
