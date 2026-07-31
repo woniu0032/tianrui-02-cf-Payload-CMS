@@ -12,6 +12,7 @@ async function start() {
     config,
     express: app,
     secret: process.env.PAYLOAD_SECRET || 'tianrui-payload-secret-key-2024',
+    local: false,
   })
 
   // Start the server

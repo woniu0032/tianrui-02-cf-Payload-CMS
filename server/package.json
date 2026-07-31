@@ -5,10 +5,10 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "payload generate:types",
+    "build": "payload generate:types && payload build",
     "dev": "payload dev",
     "payload": "payload",
-    "start": "tsx src/server.ts",
+    "start": "payload start",
     "generate:types": "payload generate:types",
     "seed": "tsx scripts/seed.ts",
     "migrate": "payload migrate",
