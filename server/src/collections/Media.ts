@@ -56,14 +56,8 @@ export const Media: CollectionConfig = {
     },
     {
       name: 'category',
-      type: 'select',
+      type: 'text',
       label: '分类',
-      options: [
-        { label: '产品图片', value: 'product' },
-        { label: '新闻封面', value: 'news' },
-        { label: '工厂照片', value: 'factory' },
-        { label: '其他', value: 'other' },
-      ],
       defaultValue: 'other',
     },
   ],

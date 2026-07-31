@@ -14,15 +14,9 @@ export const FormSubmissions: CollectionConfig = {
   fields: [
     {
       name: 'formType',
-      type: 'select',
+      type: 'text',
       label: '表单类型',
       required: true,
-      options: [
-        { label: '联系表单', value: 'contact' },
-        { label: '询价表单', value: 'inquiry' },
-        { label: '反馈表单', value: 'feedback' },
-        { label: '留言表单', value: 'message' },
-      ],
       index: true,
     },
     {
@@ -32,13 +26,8 @@ export const FormSubmissions: CollectionConfig = {
     },
     {
       name: 'status',
-      type: 'select',
+      type: 'text',
       label: '状态',
-      options: [
-        { label: '待处理', value: 'pending' },
-        { label: '已处理', value: 'processed' },
-        { label: '已归档', value: 'archived' },
-      ],
       defaultValue: 'pending',
       index: true,
     },
