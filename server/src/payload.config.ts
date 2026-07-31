@@ -33,7 +33,7 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
     },
-    push: false, // 禁用自动 schema 同步，避免枚举类型冲突
+    push: true, // 首次部署时启用自动 schema 同步创建表结构
   }),
   serverURL: process.env.PAYLOAD_PUBLIC_SERVER_URL || 'http://localhost:8080',
   cors: [
