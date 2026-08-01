@@ -19,8 +19,6 @@ export default buildConfig({
     user: Users.slug,
     meta: {
       titleSuffix: '- Tianrui Admin',
-      favicon: '/favicon.ico',
-      ogImage: '/og-image.jpg',
     },
   },
   collections: [Users, Media, Products, News, FormSubmissions, ChatSessions],
