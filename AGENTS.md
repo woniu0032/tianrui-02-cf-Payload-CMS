@@ -4,7 +4,7 @@
 
 ### Backend (Payload CMS v3, 部署在境外服务器 47.80.28.104)
 - `payload` / `@payloadcms/db-postgres` / `@payloadcms/richtext-lexical` / `@payloadcms/payload-cloud`
-- `@payloadcms/next` + `next` ^15 — **v3 admin 面板与 API 的运行载体**
+- `@payloadcms/next` + `next` 16.2.12 — **v3 admin 面板与 API 的运行载体**
 - `sharp` 0.32.6 — 图片处理；`uuid` — 聊天会话 ID
 
 ### Frontend (Cloudflare Pages)
@@ -30,6 +30,9 @@
 - ❌ `payload start` / `payload build` 命令 → v3 不存在；scripts 用 `next build` / `next start`
 - ❌ PostgreSQL `select` 字段建枚举冲突 → 全改 `text`
 - ❌ `push: false` 不建表 → 首次用 `push: true`
+- ❌ Next.js 16 Turbopack + 项目根有 `package.json`/`pnpm-lock.yaml` → workspace root 误判，`turbopack.root`/`outputFileTracingRoot` 均无效 → 删除根目录 lockfile + 手动 API route 文件后构建通过
+- ❌ 手动创建 `api/[...slug]/route.ts` 等路由文件 → Payload v3.86.0 的 `@payloadcms/next/routes` 不再导出 `restHandler`/`graphQLHandler`，由 `withPayload` 自动挂载 → 删除手动路由文件
+- ❌ `payload.config.ts` 的 `meta.favicon`/`meta.ogImage` → v3.86.0 `MetaConfig` 类型不含这两个字段，TS 编译报错 → 只保留 `titleSuffix`
 
 ## Lessons
 
@@ -41,3 +44,8 @@
 - 部署走「国内 push GitHub（增量，勿删库）+ 境外服务器 `update-deploy.sh` 拉取」；服务器直连 GitHub 比国内 push 稳
 - `package.json` 的 next 版本须与 `pnpm-lock.yaml` 实际解析一致（lockfile 解析到 next@16.2.12，写 `^15` 会导致服务器 `pnpm install` 重装/版本漂移）
 - `.env` 里 CORS 变量名是复数 `CORS_ORIGINS`/`CSRF_ORIGINS`（payload.config.ts 按此读取），写成单数 `CORS_ORIGIN` 不生效
+- 境外服务器 1.6GB 内存无 swap 时 `next build` 会 OOM 卡死；加 4GB swap 后构建约 103s 完成
+- Payload v3.86.0 的 API 路由由 `withPayload` 自动挂载，不要手动创建 `api/[...slug]/route.ts` 等文件
+- `next.config.js` 只需 `withPayload({})` 即可，无需 `turbopack.root`/`outputFileTracingRoot`（删除根目录 lockfile 后 workspace 检测不再误判）
+- `.env` 不在 git 中，服务器首次部署需手动创建；DB 用户 `tianrui_user`，库 `tianrui_payload`
+- PM2 启动命令需带 `PORT=8080`：`PORT=8080 pm2 start pnpm --name tianrui-payload -- start`，否则默认监听 3000
