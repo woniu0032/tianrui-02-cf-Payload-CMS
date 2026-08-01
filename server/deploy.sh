@@ -110,10 +110,16 @@ create_admin() {
 # 构建应用
 build_app() {
     log_info "构建应用..."
-    
+
     cd "$APP_DIR/server"
-    pnpm build
-    
+
+    # Payload v3 必需：生成 admin 组件映射，缺失会导致 admin 白屏
+    pnpm payload generate:importmap
+    # 生成 TypeScript 类型定义
+    pnpm payload generate:types
+    # next build 内存消耗大，需提高堆内存上限
+    NODE_OPTIONS='--max-old-space-size=2048 --no-deprecation' pnpm build
+
     log_info "构建完成"
 }
 
@@ -127,13 +133,15 @@ setup_pm2() {
     fi
     
     # 创建 PM2 配置文件
+    # 注意：Payload v3 admin 由 Next.js 承载，必须用 next start（pnpm start），
+    #       v3 已移除 payload serve 命令，旧写法会导致进程起不来。
     cat > "$APP_DIR/ecosystem.config.js" << 'EOF'
 module.exports = {
   apps: [{
     name: 'tianrui-payload',
     cwd: '/opt/tianrui-payload/server',
-    script: 'node_modules/.bin/payload',
-    args: 'serve',
+    script: 'node_modules/.bin/next',
+    args: 'start',
     instances: 1,
     autorestart: true,
     watch: false,

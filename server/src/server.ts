@@ -1,29 +1,35 @@
-import payload from 'payload'
-import config from './payload.config'
-import express from 'express'
+import next from 'next'
+import { parse } from 'url'
+import { createServer } from 'http'
 
-const PORT = process.env.PORT || 8080
+const port = parseInt(process.env.PORT || '8080', 10)
+const dev = process.env.NODE_ENV !== 'production'
+const hostname = '0.0.0.0'
 
 async function start() {
-  const app = express()
+  const app = next({ dev, hostname, port, dir: process.cwd() })
+  const handle = app.getRequestHandler()
+  await app.prepare()
 
-  // Initialize Payload with Express app
-  await payload.init({
-    config,
-    express: app,
-    secret: process.env.PAYLOAD_SECRET || 'tianrui-payload-secret-key-2024',
-    local: false,
+  const server = createServer(async (req, res) => {
+    try {
+      const parsedUrl = parse(req.url || '/', true)
+      await handle(req, res, parsedUrl)
+    } catch (err) {
+      console.error('Error handling', req.url, err)
+      res.statusCode = 500
+      res.end('internal server error')
+    }
   })
 
-  // Start the server
-  app.listen(PORT, () => {
-    console.log(`🚀 Payload CMS server listening on port ${PORT}`)
-    console.log(`📊 Admin panel: http://localhost:${PORT}/admin`)
-    console.log(`🔌 API: http://localhost:${PORT}/api`)
+  server.listen(port, hostname, () => {
+    console.log(`Payload CMS (Next.js) on http://${hostname}:${port}`)
+    console.log(`Admin: http://localhost:${port}/admin`)
+    console.log(`API: http://localhost:${port}/api`)
   })
 }
 
-start().catch((error) => {
-  console.error('Failed to start server:', error)
+start().catch((err) => {
+  console.error('Failed to start:', err)
   process.exit(1)
 })
