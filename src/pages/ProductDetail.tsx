@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
-import { supabase } from '../supabase/client';
 import { ArrowLeft, ShoppingCart, FileText, ChevronLeft, ChevronRight, Shield, Flame, Droplets, Zap } from 'lucide-react';
+import { fetchProductById, fetchProducts } from '../services/api';
 
 interface ProductSpec {
   label: string;
@@ -49,23 +49,80 @@ export default function ProductDetail() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [related, setRelated] = useState<any[]>([]);
 
-  // 从数据库获取产品详情
+  // 从 Payload CMS 获取产品详情
   useEffect(() => {
     async function fetchProduct() {
       if (!id) return;
-      
-      try {
-        // 尝试从数据库获取
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('id', id)
-          .eq('is_active', true)
-          .single();
 
-        if (error) {
-          console.log('数据库查询失败，使用静态数据');
-          // 使用静态数据
+      try {
+        // 尝试从 Payload CMS 获取
+        const productData = await fetchProductById(id);
+
+        if (productData) {
+          // 解析 Payload CMS 产品数据
+          const attributes = productData.attributes || {};
+          const images: ProductImage[] = [];
+
+          // 处理图片数组
+          if (productData.images && Array.isArray(productData.images)) {
+            productData.images.forEach((img: any) => {
+              if (img?.image?.url) {
+                images.push({ url: img.image.url, type: img.sortOrder === 0 ? 'main' : 'detail' });
+              }
+            });
+          }
+
+          // 如果没有图片，使用主图
+          if (images.length === 0 && productData.coverImage?.url) {
+            images.push({ url: productData.coverImage.url, type: 'main' });
+          }
+
+          setProduct({
+            id: productData.id,
+            name: productData.name,
+            nameEn: productData.nameEn || productData.name,
+            description: productData.description || '',
+            descriptionEn: productData.descriptionEn || productData.description || '',
+            image: images[0]?.url || '',
+            images: images,
+            specs: [
+              { label: '成分', labelEn: 'Composition', value: attributes.specifications?.find((s: any) => s.label === '成分')?.value || '88%棉 + 12%锦纶', valueEn: attributes.specifications?.find((s: any) => s.labelEn === 'Composition')?.value },
+              { label: '克重', labelEn: 'Weight', value: attributes.specifications?.find((s: any) => s.label === '克重')?.value || '245 GSM', valueEn: attributes.specifications?.find((s: any) => s.labelEn === 'Weight')?.value },
+              { label: '颜色', labelEn: 'Color', value: attributes.specifications?.find((s: any) => s.label === '颜色')?.value || '深蓝色', valueEn: attributes.specifications?.find((s: any) => s.labelEn === 'Color')?.value },
+              { label: '型号', labelEn: 'Model', value: attributes.specifications?.find((s: any) => s.label === '型号')?.value || '-', valueEn: attributes.specifications?.find((s: any) => s.labelEn === 'Model')?.value },
+              { label: '应用', labelEn: 'Application', value: attributes.applications?.[0]?.item || '阻燃工作服', valueEn: attributes.applications?.[0]?.itemEn },
+            ],
+            features: attributes.features?.map((f: any) => f.item) || ['阻燃', '防油', '防水', '防静电'],
+            featuresEn: attributes.features?.map((f: any) => f.itemEn) || ['Flame Retardant', 'Oil Resistant', 'Waterproof', 'Anti-static'],
+            category: productData.category,
+            categoryEn: productData.categoryEn || productData.category,
+          });
+
+          // 获取相关产品
+          try {
+            const relatedResponse = await fetchProducts({
+              category: productData.category,
+              limit: 3,
+            });
+
+            if (relatedResponse.data) {
+              setRelated(relatedResponse.data
+                .filter((item: any) => item.id !== id)
+                .slice(0, 3)
+                .map((item: any) => ({
+                  id: item.id,
+                  name: item.name,
+                  nameEn: item.nameEn || item.name,
+                  image: item.images?.[0]?.image?.url || item.coverImage?.url || '',
+                }))
+              );
+            }
+          } catch (err) {
+            console.error('获取相关产品出错:', err);
+          }
+        } else {
+          // 如果 API 返回 null，使用静态数据
+          console.log('API 返回空数据，使用静态数据');
           const staticProduct = staticProducts.find(p => p.id === id) || staticProducts[0];
           setProduct({
             id: staticProduct.id,
@@ -86,52 +143,30 @@ export default function ProductDetail() {
             category: '阻燃面料',
             categoryEn: 'Flame Retardant',
           });
-        } else if (data) {
-          // 解析数据库产品数据
-          const specs = (data.specifications as Record<string, any>) || {};
-          const images: ProductImage[] = specs.images || [{ url: data.image_url || '', type: 'main' }];
-
-          setProduct({
-            id: data.id,
-            name: data.name,
-            nameEn: data.name_en || data.name,
-            description: data.description || '',
-            descriptionEn: data.description_en || data.description || '',
-            image: data.image_url || '',
-            images: images,
-            specs: [
-              { label: '成分', labelEn: 'Composition', value: specs.composition || '88%棉 + 12%锦纶', valueEn: specs.composition_en },
-              { label: '克重', labelEn: 'Weight', value: specs.weight || '245 GSM', valueEn: specs.weight_en },
-              { label: '颜色', labelEn: 'Color', value: specs.color || '深蓝色', valueEn: specs.color_en },
-              { label: '型号', labelEn: 'Model', value: specs.model || '-', valueEn: specs.model },
-              { label: '应用', labelEn: 'Application', value: specs.application || '阻燃工作服', valueEn: specs.application_en },
-            ],
-            features: specs.features || ['阻燃', '防油', '防水', '防静电'],
-            featuresEn: specs.features_en || ['Flame Retardant', 'Oil Resistant', 'Waterproof', 'Anti-static'],
-            category: data.category,
-            categoryEn: data.category,
-          });
-
-          // 获取相关产品
-          const { data: relatedData } = await supabase
-            .from('products')
-            .select('*')
-            .eq('category', data.category)
-            .eq('is_active', true)
-            .neq('id', id)
-            .limit(3);
-
-          if (relatedData) {
-            setRelated(relatedData.map(item => ({
-              id: item.id,
-              name: item.name,
-              nameEn: item.name_en || item.name,
-              image: item.image_url,
-            })));
-          }
         }
       } catch (err) {
         console.error('获取产品出错:', err);
+        // 出错时使用静态数据
+        const staticProduct = staticProducts.find(p => p.id === id) || staticProducts[0];
+        setProduct({
+          id: staticProduct.id,
+          name: staticProduct.name,
+          nameEn: staticProduct.nameEn,
+          description: staticProduct.desc,
+          descriptionEn: staticProduct.descEn,
+          image: staticProduct.image,
+          images: [{ url: staticProduct.image, type: 'main' }],
+          specs: [
+            { label: '成分', labelEn: 'Composition', value: '100% Polyester' },
+            { label: '克重', labelEn: 'Weight', value: '180-220g/m²' },
+            { label: '幅宽', labelEn: 'Width', value: '150cm' },
+            { label: '认证', labelEn: 'Certification', value: 'ISO, OEKO-TEX' },
+          ],
+          features: ['阻燃', '耐高温', '环保'],
+          featuresEn: ['Flame Retardant', 'High Temp', 'Eco-friendly'],
+          category: '阻燃面料',
+          categoryEn: 'Flame Retardant',
+        });
       } finally {
         setLoading(false);
       }

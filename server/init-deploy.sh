@@ -156,13 +156,19 @@ step_install_and_build() {
     log_step "步骤 7/9: 安装依赖并构建"
     
     cd "$APP_DIR/server"
-    
+
     log_info "安装依赖..."
     pnpm install
-    
+
+    log_info "生成 admin 组件映射（Payload v3 必需）..."
+    pnpm payload generate:importmap
+
     log_info "生成类型定义..."
-    pnpm build
-    
+    pnpm payload generate:types
+
+    log_info "构建应用（next build）..."
+    NODE_OPTIONS='--max-old-space-size=2048 --no-deprecation' pnpm build
+
     log_info "✅ 依赖安装和构建完成"
 }
 
@@ -202,13 +208,15 @@ step_configure_and_start() {
     pnpm seed || log_warn "管理员可能已存在"
     
     # 创建 PM2 配置
+    # 注意：Payload v3 admin 由 Next.js 承载，必须用 next start，
+    #       v3 已移除 payload serve 命令，旧写法会导致进程起不来。
     cat > "$APP_DIR/ecosystem.config.js" << EOF
 module.exports = {
   apps: [{
     name: '${APP_NAME}',
     cwd: '${APP_DIR}/server',
-    script: 'node_modules/.bin/payload',
-    args: 'serve',
+    script: 'node_modules/.bin/next',
+    args: 'start',
     instances: 1,
     autorestart: true,
     watch: false,

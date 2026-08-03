@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "status": "completed",
+    "content": "修复 API 路由 404 问题（删除手动 route.ts 后 withPayload 未自动挂载 REST/GraphQL 路由）",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "status": "in_progress",
+    "content": "修复 Postgres 连接错误（SASL: client password must be a string）",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "status": "pending",
+    "content": "重新构建并部署验证",
+    "priority": "high"
+  }
+]

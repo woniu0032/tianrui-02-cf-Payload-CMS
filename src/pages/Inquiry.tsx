@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
-import { supabase } from '../supabase/client';
+import { submitForm } from '../services/api';
 import { Send, Package } from 'lucide-react';
 
 const products = [
@@ -31,25 +31,31 @@ export default function Inquiry() {
     e.preventDefault();
     setLoading(true);
 
-    const selectedProduct = products.find(p => p.id === formData.product);
+    try {
+      const selectedProduct = products.find(p => p.id === formData.product);
 
-    const { error } = await supabase.from('inquiries').insert({
-      product_id: formData.product,
-      product_name: selectedProduct ? (language === 'zh' ? selectedProduct.name : selectedProduct.nameEn) : '',
-      quantity: formData.quantity,
-      customer_name: formData.name,
-      company_name: formData.company,
-      email: formData.email,
-      phone: formData.phone,
-      message: formData.message
-    });
+      await submitForm({
+        formType: 'inquiry',
+        data: {
+          product_id: formData.product,
+          product_name: selectedProduct ? (language === 'zh' ? selectedProduct.name : selectedProduct.nameEn) : '',
+          quantity: formData.quantity,
+          customer_name: formData.name,
+          company_name: formData.company,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message
+        }
+      });
 
-    setLoading(false);
-
-    if (!error) {
       setSubmitted(true);
       setFormData({ product: '', quantity: '', name: '', company: '', email: '', phone: '', message: '' });
       setTimeout(() => setSubmitted(false), 3000);
+    } catch (error) {
+      console.error('Failed to submit inquiry:', error);
+      alert('提交失败，请重试');
+    } finally {
+      setLoading(false);
     }
   };
 

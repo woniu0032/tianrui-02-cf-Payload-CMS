@@ -5,11 +5,11 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "payload generate:types",
-    "dev": "payload dev",
-    "payload": "payload",
-    "start": "tsx src/server.ts",
+    "build": "cross-env NODE_OPTIONS=--no-deprecation NEXT_TURBOPACK=0 next build",
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "generate:types": "payload generate:types",
+    "generate:importmap": "payload generate:importmap",
     "seed": "tsx scripts/seed.ts",
     "migrate": "payload migrate",
     "migrate-and-seed": "payload migrate && tsx scripts/seed.ts"
@@ -21,6 +21,7 @@
     "@payloadcms/richtext-lexical": "latest",
     "cross-env": "^7.0.3",
     "graphql": "^16.8.1",
+    "next": "16.2.12",
     "payload": "latest",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

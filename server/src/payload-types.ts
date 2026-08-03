@@ -132,7 +132,7 @@ export interface UserAuthOperations {
 export interface User {
   id: number;
   name?: string | null;
-  role: 'admin' | 'editor' | 'support';
+  role: string;
   avatar?: (number | null) | Media;
   isActive?: boolean | null;
   updatedAt: string;
@@ -162,7 +162,7 @@ export interface Media {
   id: number;
   alt?: string | null;
   caption?: string | null;
-  category?: ('product' | 'news' | 'factory' | 'other') | null;
+  category?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -338,7 +338,7 @@ export interface News {
  */
 export interface FormSubmission {
   id: number;
-  formType: 'contact' | 'inquiry' | 'feedback' | 'message';
+  formType: string;
   data?:
     | {
         [k: string]: unknown;
@@ -348,7 +348,7 @@ export interface FormSubmission {
     | number
     | boolean
     | null;
-  status?: ('pending' | 'processed' | 'archived') | null;
+  status?: string | null;
   ipAddress?: string | null;
   userAgent?: string | null;
   notes?: string | null;
@@ -367,13 +367,13 @@ export interface ChatSession {
   userId?: string | null;
   messages?:
     | {
-        role: 'user' | 'assistant' | 'system';
+        role: string;
         content: string;
         timestamp: string;
         id?: string | null;
       }[]
     | null;
-  status?: ('active' | 'closed' | 'transferred') | null;
+  status?: string | null;
   metadata?:
     | {
         [k: string]: unknown;
