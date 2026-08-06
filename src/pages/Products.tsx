@@ -10,7 +10,7 @@ interface FabricMaterial {
   name: string;
   nameEn: string;
   icon: React.ReactNode;
-  subMenu?: { name: string; nameEn: string }[];
+  subMenu?: { name: string; nameEn: string; dbCategory: string }[];
   description: string;
   descriptionEn: string;
   features: string[];
@@ -32,14 +32,18 @@ interface Product {
 
 const fabricMaterials: FabricMaterial[] = [
   {
-    id: 'aramid',
-    name: '芳纶',
-    nameEn: 'Aramid Fabric',
+    id: 'flame-retardant',
+    name: '阻燃面料',
+    nameEn: 'Flame Retardant Fabric',
     icon: <Flame className="w-6 h-6" />,
-    description: '采用芳纶纤维织造，具有优异的阻燃、耐高温性能，遇火不燃烧、不熔滴，是高端防护服装的首选材料。',
-    descriptionEn: 'Made from aramid fiber with excellent flame retardant and high temperature resistance properties.',
-    features: ['永久阻燃', '耐高温', '不熔滴', '高强度'],
-    featuresEn: ['Permanent Flame Retardant', 'High Temperature Resistant', 'Non-dripping', 'High Strength'],
+    subMenu: [
+      { name: '芳纶', nameEn: 'Aramid', dbCategory: '芳纶' },
+      { name: '后整理阻燃', nameEn: 'Finished FR', dbCategory: '后整理阻燃' }
+    ],
+    description: '采用先进阻燃技术处理，具有优异的防火性能，遇火不燃烧、不熔滴，有效保护穿着者安全。广泛应用于石油、化工、电力、冶金等行业的工装制服。',
+    descriptionEn: 'Advanced flame retardant technology, excellent fire resistance, non-combustible and non-dripping. Widely used in petroleum, chemical, power, and metallurgy industries.',
+    features: ['永久阻燃', '耐高温', '不熔滴', '环保无毒'],
+    featuresEn: ['Permanent Flame Retardant', 'High Temperature Resistant', 'Non-dripping', 'Eco-friendly'],
     specs: [
       { label: '阻燃等级', labelEn: 'Flame Retardant Level', value: 'EN11612 / NFPA2112' },
       { label: '耐温范围', labelEn: 'Temp Range', value: '-40°C ~ 260°C' },
@@ -50,76 +54,27 @@ const fabricMaterials: FabricMaterial[] = [
     dbCategory: '芳纶',
   },
   {
-    id: 'finished-fr',
-    name: '后整理阻燃',
-    nameEn: 'Finished FR Fabric',
-    icon: <Flame className="w-6 h-6" />,
-    description: '通过后整理工艺赋予面料阻燃性能，成本适中，阻燃效果持久，适用于各类工装制服。',
-    descriptionEn: 'Flame retardant properties through finishing process, cost-effective and durable.',
-    features: ['阻燃持久', '成本适中', '手感柔软', '色彩丰富'],
-    featuresEn: ['Durable FR', 'Cost-effective', 'Soft Hand Feel', 'Rich Colors'],
-    specs: [
-      { label: '阻燃等级', labelEn: 'Flame Retardant Level', value: 'EN11612 / GB 8965' },
-      { label: '耐洗次数', labelEn: 'Wash Cycles', value: '≥50次' },
-      { label: '幅宽', labelEn: 'Width', value: '150cm' },
-    ],
-    applications: ['普通工装', '制服', '工作服', '防护服'],
-    applicationsEn: ['General Workwear', 'Uniforms', 'Work Clothes', 'Protective Clothing'],
-    dbCategory: '后整理阻燃',
-  },
-  {
-    id: 'waterproof',
-    name: '防水面料',
-    nameEn: 'Waterproof Fabric',
+    id: 'three-proof',
+    name: '三防面料',
+    nameEn: 'Three-Proof Fabric',
     icon: <Shield className="w-6 h-6" />,
-    description: '采用特殊涂层或膜技术，具有优异的防水性能，同时保持良好的透气性，适合户外和雨天作业。',
-    descriptionEn: 'Special coating or membrane technology with excellent waterproof performance and breathability.',
-    features: ['防水透气', '耐水压', '耐磨损', '易打理'],
-    featuresEn: ['Waterproof & Breathable', 'Water Pressure Resistant', 'Wear Resistant', 'Easy Care'],
+    subMenu: [
+      { name: '防水面料', nameEn: 'Waterproof', dbCategory: '防水面料' },
+      { name: '防油面料', nameEn: 'Oil Resistant', dbCategory: '防油面料' },
+      { name: '易去污面料', nameEn: 'Stain Resistant', dbCategory: '易去污面料' }
+    ],
+    description: '防水、防油、防污三合一功能面料，采用纳米技术处理，在纤维表面形成保护膜，有效抵御各种液体和油污渗透。',
+    descriptionEn: 'Waterproof, oil-proof, and stain-proof 3-in-1 functional fabric with nano-technology protection film.',
+    features: ['防水透气', '防油防污', '易清洗', '持久耐用'],
+    featuresEn: ['Waterproof & Breathable', 'Oil & Stain Resistant', 'Easy Clean', 'Durable'],
     specs: [
       { label: '防水等级', labelEn: 'Waterproof Level', value: '≥10000mm' },
       { label: '透气指数', labelEn: 'Breathability', value: '≥8000g/m²/24h' },
-      { label: '耐洗次数', labelEn: 'Wash Cycles', value: '≥50次' },
-    ],
-    applications: ['户外工作服', '雨衣', '运动服', '登山服'],
-    applicationsEn: ['Outdoor Workwear', 'Rainwear', 'Sportswear', 'Mountaineering'],
-    dbCategory: '防水面料',
-  },
-  {
-    id: 'oil-resistant',
-    name: '防油面料',
-    nameEn: 'Oil Resistant Fabric',
-    icon: <Shield className="w-6 h-6" />,
-    description: '具有优异的防油性能，能有效抵御各类油污渗透，易于清洗，适合餐饮和工业环境。',
-    descriptionEn: 'Excellent oil resistance, effectively prevents oil penetration and easy to clean.',
-    features: ['防油防污', '易清洗', '耐洗涤', '持久耐用'],
-    featuresEn: ['Oil & Stain Resistant', 'Easy Clean', 'Wash Durable', 'Long-lasting'],
-    specs: [
       { label: '防油等级', labelEn: 'Oil Resistance', value: '≥6级' },
-      { label: '耐洗次数', labelEn: 'Wash Cycles', value: '≥50次' },
-      { label: '幅宽', labelEn: 'Width', value: '150cm' },
     ],
-    applications: ['厨师服装', '工业围裙', '汽修工装', '机械加工'],
-    applicationsEn: ['Chef Uniforms', 'Industrial Aprons', 'Auto Repair Workwear', 'Machining'],
-    dbCategory: '防油面料',
-  },
-  {
-    id: 'stain-resistant',
-    name: '易去污面料',
-    nameEn: 'Stain Resistant Fabric',
-    icon: <Shield className="w-6 h-6" />,
-    description: '采用纳米技术处理，污渍不易附着，轻松擦拭即可清洁，保持服装持久如新。',
-    descriptionEn: 'Nano-technology treatment prevents stain adhesion and easy to wipe clean.',
-    features: ['易去污', '防污防渍', '易打理', '持久如新'],
-    featuresEn: ['Stain Resistant', 'Anti-stain', 'Easy Care', 'Long-lasting Fresh'],
-    specs: [
-      { label: '去污等级', labelEn: 'Stain Removal', value: '≥4级' },
-      { label: '耐洗次数', labelEn: 'Wash Cycles', value: '≥50次' },
-      { label: '幅宽', labelEn: 'Width', value: '150cm' },
-    ],
-    applications: ['医疗防护服', '实验室服装', '洁净室服装', '日常工装'],
-    applicationsEn: ['Medical Protection', 'Lab Clothing', 'Cleanroom Wear', 'Daily Workwear'],
-    dbCategory: '易去污面料',
+    applications: ['户外工作服', '厨师服装', '医疗防护服', '工业围裙'],
+    applicationsEn: ['Outdoor Workwear', 'Chef Uniforms', 'Medical Protection', 'Industrial Aprons'],
+    dbCategory: '防水面料',
   },
   {
     id: 'acid-alkali',
@@ -194,40 +149,26 @@ const fabricMaterials: FabricMaterial[] = [
     dbCategory: '涤棉面料',
   },
   {
-    id: 't400',
-    name: 'T400面料',
-    nameEn: 'T400 Fabric',
+    id: 'elastic',
+    name: '弹力面料',
+    nameEn: 'Elastic Fabric',
     icon: <Move className="w-6 h-6" />,
-    description: '采用T400弹性纤维，具有优异的弹性和回复性，无需氨纶即可实现良好弹力，耐洗性好。',
-    descriptionEn: 'T400 elastic fiber with excellent elasticity and recovery, no spandex needed.',
-    features: ['高弹性', '回复性好', '耐洗持久', '尺寸稳定'],
-    featuresEn: ['High Elasticity', 'Good Recovery', 'Wash Durable', 'Dimension Stable'],
-    specs: [
-      { label: '弹性纤维', labelEn: 'Elastic Fiber', value: 'T400' },
-      { label: '伸长率', labelEn: 'Elongation', value: '≥20%' },
-      { label: '回复率', labelEn: 'Recovery', value: '≥95%' },
+    subMenu: [
+      { name: 'T400面料', nameEn: 'T400 Fabric', dbCategory: 'T400面料' },
+      { name: '氨纶面料', nameEn: 'Spandex Fabric', dbCategory: '氨纶面料' }
     ],
-    applications: ['运动服', '休闲裤', '工装制服', '户外服装'],
-    applicationsEn: ['Sportswear', 'Casual Pants', 'Workwear', 'Outdoor Clothing'],
-    dbCategory: 'T400面料',
-  },
-  {
-    id: 'spandex',
-    name: '氨纶面料',
-    nameEn: 'Spandex Fabric',
-    icon: <Move className="w-6 h-6" />,
-    description: '添加氨纶弹性纤维，具有极佳的弹性和回复性，穿着舒适不紧绷，活动自如。',
+    description: '添加氨纶等弹性纤维，具有优异的弹性和回复性，穿着舒适不紧绷，活动自如。',
     descriptionEn: 'With spandex for excellent elasticity and recovery, comfortable and flexible.',
     features: ['高弹性', '回复性好', '不紧绷', '活动自如'],
     featuresEn: ['High Elasticity', 'Good Recovery', 'Non-restrictive', 'Flexible'],
     specs: [
-      { label: '氨纶含量', labelEn: 'Spandex Content', value: '3%-20%' },
-      { label: '伸长率', labelEn: 'Elongation', value: '≥30%' },
+      { label: '弹性纤维', labelEn: 'Elastic Fiber', value: '氨纶/莱卡' },
+      { label: '伸长率', labelEn: 'Elongation', value: '≥20%' },
       { label: '回复率', labelEn: 'Recovery', value: '≥95%' },
     ],
-    applications: ['瑜伽服', '紧身工装', '运动服', '内衣'],
-    applicationsEn: ['Yoga Wear', 'Fitted Workwear', 'Sportswear', 'Underwear'],
-    dbCategory: '氨纶面料',
+    applications: ['运动服', '瑜伽服', '紧身工装', '休闲裤'],
+    applicationsEn: ['Sportswear', 'Yoga Wear', 'Fitted Workwear', 'Casual Pants'],
+    dbCategory: 'T400面料',
   },
   {
     id: 'fluorescent',
@@ -310,6 +251,7 @@ export default function Products() {
   const [selectedMaterial, setSelectedMaterial] = useState<FabricMaterial | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
   const [hoveredMaterial, setHoveredMaterial] = useState<string | null>(null);
   const [productsByCategory, setProductsByCategory] = useState<Record<string, Product[]>>({});
   const [loading, setLoading] = useState(true);
@@ -358,9 +300,10 @@ export default function Products() {
     fetchAllProducts();
   }, []);
 
-  const handleMaterialClick = (material: FabricMaterial) => {
+  const handleMaterialClick = (material: FabricMaterial, subCategory?: string) => {
     setSelectedMaterial(material);
     setActiveCategory(material.id);
+    setActiveSubCategory(subCategory || null);
   };
 
   // 子菜单延迟消失处理
@@ -399,11 +342,29 @@ export default function Products() {
     setSelectedMaterial(null);
     setSelectedProduct(null);
     setActiveCategory(null);
+    setActiveSubCategory(null);
   };
 
   // 获取当前选中分类对应的产品列表
   const getCurrentProducts = (): Product[] => {
     if (!selectedMaterial) return [];
+    
+    // 如果有选中的子分类，显示子分类产品
+    if (activeSubCategory) {
+      return productsByCategory[activeSubCategory] || [];
+    }
+    
+    // 如果有二级菜单，显示该分类下所有子分类的产品
+    if (selectedMaterial.subMenu && selectedMaterial.subMenu.length > 0) {
+      const allProducts: Product[] = [];
+      selectedMaterial.subMenu.forEach(sub => {
+        const subProducts = productsByCategory[sub.dbCategory] || [];
+        allProducts.push(...subProducts);
+      });
+      return allProducts;
+    }
+    
+    // 没有二级菜单，直接显示该分类产品
     return productsByCategory[selectedMaterial.dbCategory] || [];
   };
 
@@ -436,7 +397,9 @@ export default function Products() {
           {fabricMaterials.map((material, index) => {
             const hasSubMenu = material.subMenu && material.subMenu.length > 0;
             const isHovered = hoveredMaterial === material.id;
-            const productCount = productsByCategory[material.dbCategory]?.length || 0;
+            const productCount = hasSubMenu 
+              ? material.subMenu!.reduce((sum, sub) => sum + (productsByCategory[sub.dbCategory]?.length || 0), 0)
+              : (productsByCategory[material.dbCategory]?.length || 0);
             return (
               <motion.div
                 key={material.id}
@@ -475,7 +438,10 @@ export default function Products() {
                       {material.subMenu!.map((subItem, subIdx) => (
                         <div
                           key={subIdx}
-                          onClick={() => handleMaterialClick(material)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMaterialClick(material, subItem.dbCategory);
+                          }}
                           className="relative px-4 py-2.5 text-sm font-medium text-blue-800 hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 cursor-pointer border-b border-blue-100 last:border-b-0"
                         >
                           <span className="flex items-center gap-2">
@@ -511,6 +477,14 @@ export default function Products() {
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">
                       {isZh ? selectedMaterial.name : selectedMaterial.nameEn}
+                      {activeSubCategory && (
+                        <span className="text-blue-600 ml-2">
+                          - {isZh 
+                            ? selectedMaterial.subMenu?.find(s => s.dbCategory === activeSubCategory)?.name
+                            : selectedMaterial.subMenu?.find(s => s.dbCategory === activeSubCategory)?.nameEn
+                          }
+                        </span>
+                      )}
                     </h2>
                     <p className="text-sm text-gray-500">
                       {isZh ? selectedMaterial.description : selectedMaterial.descriptionEn}
