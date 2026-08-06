@@ -18,8 +18,7 @@ interface FabricMaterial {
   specs: { label: string; labelEn: string; value: string }[];
   applications: string[];
   applicationsEn: string[];
-  products: Product[];
-  dbCategory?: string;
+  dbCategory: string; // 对应后台 Payload CMS 的 category 字段值
 }
 
 interface Product {
@@ -31,25 +30,16 @@ interface Product {
   descriptionEn: string;
 }
 
-interface SubMenuItem {
-  name: string;
-  nameEn: string;
-}
-
 const fabricMaterials: FabricMaterial[] = [
   {
-    id: 'flame-retardant',
-    name: '阻燃面料',
-    nameEn: 'Flame Retardant Fabric',
+    id: 'aramid',
+    name: '芳纶',
+    nameEn: 'Aramid Fabric',
     icon: <Flame className="w-6 h-6" />,
-    subMenu: [
-      { name: '芳纶', nameEn: 'Aramid' },
-      { name: '后整理阻燃', nameEn: 'Finished FR' }
-    ],
-    description: '采用先进阻燃技术处理，具有优异的防火性能，遇火不燃烧、不熔滴，有效保护穿着者安全。广泛应用于石油、化工、电力、冶金等行业的工装制服。',
-    descriptionEn: 'Advanced flame retardant technology, excellent fire resistance, non-combustible and non-dripping. Widely used in petroleum, chemical, power, and metallurgy industries.',
-    features: ['永久阻燃', '耐高温', '不熔滴', '环保无毒'],
-    featuresEn: ['Permanent Flame Retardant', 'High Temperature Resistant', 'Non-dripping', 'Eco-friendly'],
+    description: '采用芳纶纤维织造，具有优异的阻燃、耐高温性能，遇火不燃烧、不熔滴，是高端防护服装的首选材料。',
+    descriptionEn: 'Made from aramid fiber with excellent flame retardant and high temperature resistance properties.',
+    features: ['永久阻燃', '耐高温', '不熔滴', '高强度'],
+    featuresEn: ['Permanent Flame Retardant', 'High Temperature Resistant', 'Non-dripping', 'High Strength'],
     specs: [
       { label: '阻燃等级', labelEn: 'Flame Retardant Level', value: 'EN11612 / NFPA2112' },
       { label: '耐温范围', labelEn: 'Temp Range', value: '-40°C ~ 260°C' },
@@ -57,36 +47,79 @@ const fabricMaterials: FabricMaterial[] = [
     ],
     applications: ['石油化工工装', '电力行业制服', '冶金防护服', '消防服装'],
     applicationsEn: ['Petrochemical Workwear', 'Power Industry Uniforms', 'Metallurgy Protection', 'Firefighter Clothing'],
-    products: [], // 芳纶产品将从数据库动态获取
-    dbCategory: '芳纶', // 标记需要从数据库获取产品的分类
+    dbCategory: '芳纶',
   },
   {
-    id: 'three-proof',
-    name: '三防面料',
-    nameEn: 'Three-Proof Fabric',
-    icon: <Shield className="w-6 h-6" />,
-    subMenu: [
-      { name: '防水面料', nameEn: 'Waterproof' },
-      { name: '防油面料', nameEn: 'Oil Resistant' },
-      { name: '易去污面料', nameEn: 'Stain Resistant' }
+    id: 'finished-fr',
+    name: '后整理阻燃',
+    nameEn: 'Finished FR Fabric',
+    icon: <Flame className="w-6 h-6" />,
+    description: '通过后整理工艺赋予面料阻燃性能，成本适中，阻燃效果持久，适用于各类工装制服。',
+    descriptionEn: 'Flame retardant properties through finishing process, cost-effective and durable.',
+    features: ['阻燃持久', '成本适中', '手感柔软', '色彩丰富'],
+    featuresEn: ['Durable FR', 'Cost-effective', 'Soft Hand Feel', 'Rich Colors'],
+    specs: [
+      { label: '阻燃等级', labelEn: 'Flame Retardant Level', value: 'EN11612 / GB 8965' },
+      { label: '耐洗次数', labelEn: 'Wash Cycles', value: '≥50次' },
+      { label: '幅宽', labelEn: 'Width', value: '150cm' },
     ],
-    description: '防水、防油、防污三合一功能面料，采用纳米技术处理，在纤维表面形成保护膜，有效抵御各种液体和油污渗透。',
-    descriptionEn: 'Waterproof, oil-proof, and stain-proof 3-in-1 functional fabric with nano-technology protection film.',
-    features: ['防水透气', '防油防污', '易清洗', '持久耐用'],
-    featuresEn: ['Waterproof & Breathable', 'Oil & Stain Resistant', 'Easy Clean', 'Durable'],
+    applications: ['普通工装', '制服', '工作服', '防护服'],
+    applicationsEn: ['General Workwear', 'Uniforms', 'Work Clothes', 'Protective Clothing'],
+    dbCategory: '后整理阻燃',
+  },
+  {
+    id: 'waterproof',
+    name: '防水面料',
+    nameEn: 'Waterproof Fabric',
+    icon: <Shield className="w-6 h-6" />,
+    description: '采用特殊涂层或膜技术，具有优异的防水性能，同时保持良好的透气性，适合户外和雨天作业。',
+    descriptionEn: 'Special coating or membrane technology with excellent waterproof performance and breathability.',
+    features: ['防水透气', '耐水压', '耐磨损', '易打理'],
+    featuresEn: ['Waterproof & Breathable', 'Water Pressure Resistant', 'Wear Resistant', 'Easy Care'],
     specs: [
       { label: '防水等级', labelEn: 'Waterproof Level', value: '≥10000mm' },
       { label: '透气指数', labelEn: 'Breathability', value: '≥8000g/m²/24h' },
+      { label: '耐洗次数', labelEn: 'Wash Cycles', value: '≥50次' },
+    ],
+    applications: ['户外工作服', '雨衣', '运动服', '登山服'],
+    applicationsEn: ['Outdoor Workwear', 'Rainwear', 'Sportswear', 'Mountaineering'],
+    dbCategory: '防水面料',
+  },
+  {
+    id: 'oil-resistant',
+    name: '防油面料',
+    nameEn: 'Oil Resistant Fabric',
+    icon: <Shield className="w-6 h-6" />,
+    description: '具有优异的防油性能，能有效抵御各类油污渗透，易于清洗，适合餐饮和工业环境。',
+    descriptionEn: 'Excellent oil resistance, effectively prevents oil penetration and easy to clean.',
+    features: ['防油防污', '易清洗', '耐洗涤', '持久耐用'],
+    featuresEn: ['Oil & Stain Resistant', 'Easy Clean', 'Wash Durable', 'Long-lasting'],
+    specs: [
       { label: '防油等级', labelEn: 'Oil Resistance', value: '≥6级' },
+      { label: '耐洗次数', labelEn: 'Wash Cycles', value: '≥50次' },
+      { label: '幅宽', labelEn: 'Width', value: '150cm' },
     ],
-    applications: ['户外工作服', '厨师服装', '医疗防护服', '工业围裙'],
-    applicationsEn: ['Outdoor Workwear', 'Chef Uniforms', 'Medical Protection', 'Industrial Aprons'],
-    products: [
-      { id: 'tp-1', name: '涤纶三防面料', nameEn: 'Polyester Three-Proof', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '高强度涤纶，耐磨防水', descriptionEn: 'High-strength polyester, wear-resistant' },
-      { id: 'tp-2', name: '尼龙三防面料', nameEn: 'Nylon Three-Proof', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '轻盈柔软，强力防水', descriptionEn: 'Light and soft, strong waterproof' },
-      { id: 'tp-3', name: '棉质三防面料', nameEn: 'Cotton Three-Proof', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '天然舒适，三防处理', descriptionEn: 'Natural comfort, three-proof treated' },
-      { id: 'tp-4', name: '复合三防面料', nameEn: 'Composite Three-Proof', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '多层复合，功能全面', descriptionEn: 'Multi-layer composite, full function' },
+    applications: ['厨师服装', '工业围裙', '汽修工装', '机械加工'],
+    applicationsEn: ['Chef Uniforms', 'Industrial Aprons', 'Auto Repair Workwear', 'Machining'],
+    dbCategory: '防油面料',
+  },
+  {
+    id: 'stain-resistant',
+    name: '易去污面料',
+    nameEn: 'Stain Resistant Fabric',
+    icon: <Shield className="w-6 h-6" />,
+    description: '采用纳米技术处理，污渍不易附着，轻松擦拭即可清洁，保持服装持久如新。',
+    descriptionEn: 'Nano-technology treatment prevents stain adhesion and easy to wipe clean.',
+    features: ['易去污', '防污防渍', '易打理', '持久如新'],
+    featuresEn: ['Stain Resistant', 'Anti-stain', 'Easy Care', 'Long-lasting Fresh'],
+    specs: [
+      { label: '去污等级', labelEn: 'Stain Removal', value: '≥4级' },
+      { label: '耐洗次数', labelEn: 'Wash Cycles', value: '≥50次' },
+      { label: '幅宽', labelEn: 'Width', value: '150cm' },
     ],
+    applications: ['医疗防护服', '实验室服装', '洁净室服装', '日常工装'],
+    applicationsEn: ['Medical Protection', 'Lab Clothing', 'Cleanroom Wear', 'Daily Workwear'],
+    dbCategory: '易去污面料',
   },
   {
     id: 'acid-alkali',
@@ -104,12 +137,7 @@ const fabricMaterials: FabricMaterial[] = [
     ],
     applications: ['化工厂防护服', '实验室工作服', '电镀行业', '污水处理'],
     applicationsEn: ['Chemical Protection', 'Lab Workwear', 'Electroplating', 'Wastewater Treatment'],
-    products: [
-      { id: 'aa-1', name: '涤纶防酸碱面料', nameEn: 'Polyester Acid-Resistant', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '化学稳定性好', descriptionEn: 'Good chemical stability' },
-      { id: 'aa-2', name: 'PVC涂层防酸碱', nameEn: 'PVC Coated Acid-Resistant', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '完全密封防护', descriptionEn: 'Complete sealed protection' },
-      { id: 'aa-3', name: '橡胶防酸碱面料', nameEn: 'Rubber Acid-Resistant', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '弹性好耐腐蚀', descriptionEn: 'Elastic and corrosion-resistant' },
-      { id: 'aa-4', name: '复合防酸碱面料', nameEn: 'Composite Acid-Resistant', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '多层复合结构', descriptionEn: 'Multi-layer composite' },
-    ],
+    dbCategory: '防酸碱面料',
   },
   {
     id: 'antistatic',
@@ -121,18 +149,13 @@ const fabricMaterials: FabricMaterial[] = [
     features: ['永久抗静电', '电阻稳定', '无尘洁净', '舒适透气'],
     featuresEn: ['Permanent Antistatic', 'Stable Resistance', 'Dust-free', 'Breathable'],
     specs: [
-      { label: '表面电阻', labelEn: 'Surface Resistance', value: '10⁶-10⁹Ω' },
+      { label: '表面电阻', labelEn: 'Surface Resistance', value: '10⁶-10Ω' },
       { label: '电荷密度', labelEn: 'Charge Density', value: '<7μc/m²' },
       { label: '洗涤耐久', labelEn: 'Wash Durability', value: '≥50次' },
     ],
     applications: ['电子车间工装', '防爆环境', '无尘车间', '石油化工'],
     applicationsEn: ['Electronics Workshop', 'Explosion-proof', 'Cleanroom', 'Petrochemical'],
-    products: [
-      { id: 'as-1', name: '涤纶防静电面料', nameEn: 'Polyester Antistatic', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '导电丝编织', descriptionEn: 'Conductive yarn woven' },
-      { id: 'as-2', name: '棉质防静电面料', nameEn: 'Cotton Antistatic', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '舒适抗静电', descriptionEn: 'Comfortable antistatic' },
-      { id: 'as-3', name: '网格防静电面料', nameEn: 'Grid Antistatic', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '网格导电设计', descriptionEn: 'Grid conductive design' },
-      { id: 'as-4', name: '条纹防静电面料', nameEn: 'Stripe Antistatic', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '条纹导电丝', descriptionEn: 'Stripe conductive yarn' },
-    ],
+    dbCategory: '防静电面料',
   },
   {
     id: 'medical',
@@ -150,12 +173,7 @@ const fabricMaterials: FabricMaterial[] = [
     ],
     applications: ['医生服', '护士服', '手术服', '病号服'],
     applicationsEn: ['Doctor Coats', 'Nurse Uniforms', 'Surgical Gowns', 'Patient Gowns'],
-    products: [
-      { id: 'med-1', name: '涤棉医护面料', nameEn: 'Poly-cotton Medical', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '舒适耐用', descriptionEn: 'Comfortable and durable' },
-      { id: 'med-2', name: '全棉医护面料', nameEn: 'Cotton Medical', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '天然亲肤', descriptionEn: 'Natural skin-friendly' },
-      { id: 'med-3', name: '抗菌医护面料', nameEn: 'Antibacterial Medical', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '银离子抗菌', descriptionEn: 'Silver ion antibacterial' },
-      { id: 'med-4', name: '手术服面料', nameEn: 'Surgical Fabric', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '高阻隔性', descriptionEn: 'High barrier property' },
-    ],
+    dbCategory: '医护面料',
   },
   {
     id: 'poly-cotton',
@@ -173,39 +191,43 @@ const fabricMaterials: FabricMaterial[] = [
     ],
     applications: ['工装制服', '校服', '职业装', '休闲服'],
     applicationsEn: ['Workwear', 'School Uniforms', 'Business Wear', 'Casual Wear'],
-    products: [
-      { id: 'pc-1', name: 'T/C 65/35面料', nameEn: 'T/C 65/35 Fabric', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '标准工装面料', descriptionEn: 'Standard workwear fabric' },
-      { id: 'pc-2', name: 'T/C 80/20面料', nameEn: 'T/C 80/20 Fabric', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '高涤含量', descriptionEn: 'High polyester content' },
-      { id: 'pc-3', name: 'CVC 60/40面料', nameEn: 'CVC 60/40 Fabric', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '棉含量高', descriptionEn: 'High cotton content' },
-      { id: 'pc-4', name: '涤棉斜纹面料', nameEn: 'Poly-cotton Twill', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '经典斜纹', descriptionEn: 'Classic twill' },
-    ],
+    dbCategory: '涤棉面料',
   },
   {
-    id: 'elastic',
-    name: '弹力面料',
-    nameEn: 'Elastic Fabric',
+    id: 't400',
+    name: 'T400面料',
+    nameEn: 'T400 Fabric',
     icon: <Move className="w-6 h-6" />,
-    subMenu: [
-      { name: 'T400面料', nameEn: 'T400 Fabric' },
-      { name: '氨纶面料', nameEn: 'Spandex Fabric' }
+    description: '采用T400弹性纤维，具有优异的弹性和回复性，无需氨纶即可实现良好弹力，耐洗性好。',
+    descriptionEn: 'T400 elastic fiber with excellent elasticity and recovery, no spandex needed.',
+    features: ['高弹性', '回复性好', '耐洗持久', '尺寸稳定'],
+    featuresEn: ['High Elasticity', 'Good Recovery', 'Wash Durable', 'Dimension Stable'],
+    specs: [
+      { label: '弹性纤维', labelEn: 'Elastic Fiber', value: 'T400' },
+      { label: '伸长率', labelEn: 'Elongation', value: '≥20%' },
+      { label: '回复率', labelEn: 'Recovery', value: '≥95%' },
     ],
-    description: '添加氨纶等弹性纤维，具有优异的弹性和回复性，穿着舒适不紧绷，活动自如。',
+    applications: ['运动服', '休闲裤', '工装制服', '户外服装'],
+    applicationsEn: ['Sportswear', 'Casual Pants', 'Workwear', 'Outdoor Clothing'],
+    dbCategory: 'T400面料',
+  },
+  {
+    id: 'spandex',
+    name: '氨纶面料',
+    nameEn: 'Spandex Fabric',
+    icon: <Move className="w-6 h-6" />,
+    description: '添加氨纶弹性纤维，具有极佳的弹性和回复性，穿着舒适不紧绷，活动自如。',
     descriptionEn: 'With spandex for excellent elasticity and recovery, comfortable and flexible.',
     features: ['高弹性', '回复性好', '不紧绷', '活动自如'],
     featuresEn: ['High Elasticity', 'Good Recovery', 'Non-restrictive', 'Flexible'],
     specs: [
-      { label: '弹性纤维', labelEn: 'Elastic Fiber', value: '氨纶/莱卡' },
-      { label: '伸长率', labelEn: 'Elongation', value: '≥20%' },
+      { label: '氨纶含量', labelEn: 'Spandex Content', value: '3%-20%' },
+      { label: '伸长率', labelEn: 'Elongation', value: '≥30%' },
       { label: '回复率', labelEn: 'Recovery', value: '≥95%' },
     ],
-    applications: ['运动服', '瑜伽服', '紧身工装', '休闲裤'],
-    applicationsEn: ['Sportswear', 'Yoga Wear', 'Fitted Workwear', 'Casual Pants'],
-    products: [
-      { id: 'el-1', name: '涤纶弹力面料', nameEn: 'Polyester Elastic', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '四面弹力', descriptionEn: '4-way stretch' },
-      { id: 'el-2', name: '尼龙弹力面料', nameEn: 'Nylon Elastic', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '高弹耐磨', descriptionEn: 'High elastic and durable' },
-      { id: 'el-3', name: '棉质弹力面料', nameEn: 'Cotton Elastic', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '舒适弹力', descriptionEn: 'Comfortable elastic' },
-      { id: 'el-4', name: '弹力斜纹面料', nameEn: 'Elastic Twill', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '工装弹力', descriptionEn: 'Workwear elastic' },
-    ],
+    applications: ['瑜伽服', '紧身工装', '运动服', '内衣'],
+    applicationsEn: ['Yoga Wear', 'Fitted Workwear', 'Sportswear', 'Underwear'],
+    dbCategory: '氨纶面料',
   },
   {
     id: 'fluorescent',
@@ -223,12 +245,7 @@ const fabricMaterials: FabricMaterial[] = [
     ],
     applications: ['交通工作服', '环卫服装', '建筑工地', '救援服装'],
     applicationsEn: ['Traffic Workwear', 'Sanitation Uniforms', 'Construction', 'Rescue Clothing'],
-    products: [
-      { id: 'fl-1', name: '荧光黄面料', nameEn: 'Fluorescent Yellow', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '高亮黄色', descriptionEn: 'Bright yellow' },
-      { id: 'fl-2', name: '荧光橙面料', nameEn: 'Fluorescent Orange', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '警示橙色', descriptionEn: 'Warning orange' },
-      { id: 'fl-3', name: '反光条面料', nameEn: 'Reflective Strip Fabric', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '带反光条', descriptionEn: 'With reflective strips' },
-      { id: 'fl-4', name: '荧光涤棉面料', nameEn: 'Fluorescent Poly-cotton', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '舒适荧光', descriptionEn: 'Comfortable fluorescent' },
-    ],
+    dbCategory: '荧光面料',
   },
   {
     id: 'printed',
@@ -246,12 +263,7 @@ const fabricMaterials: FabricMaterial[] = [
     ],
     applications: ['时尚工装', '休闲服装', '家纺产品', '箱包面料'],
     applicationsEn: ['Fashion Workwear', 'Casual Wear', 'Home Textiles', 'Bag Fabric'],
-    products: [
-      { id: 'pr-1', name: '迷彩印花面料', nameEn: 'Camouflage Print', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '军用迷彩', descriptionEn: 'Military camouflage' },
-      { id: 'pr-2', name: '数码印花面料', nameEn: 'Digital Print', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '高清数码', descriptionEn: 'HD digital print' },
-      { id: 'pr-3', name: '圆网印花面料', nameEn: 'Rotary Print', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '大批量印花', descriptionEn: 'Mass production print' },
-      { id: 'pr-4', name: '转移印花面料', nameEn: 'Transfer Print', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '精细图案', descriptionEn: 'Fine patterns' },
-    ],
+    dbCategory: '印花面料',
   },
   {
     id: 'linen',
@@ -269,12 +281,7 @@ const fabricMaterials: FabricMaterial[] = [
     ],
     applications: ['夏季工装', '休闲衬衫', '高档制服', '家居服'],
     applicationsEn: ['Summer Workwear', 'Casual Shirts', 'Premium Uniforms', 'Loungewear'],
-    products: [
-      { id: 'ln-1', name: '纯亚麻面料', nameEn: 'Pure Linen', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '100%天然亚麻', descriptionEn: '100% natural linen' },
-      { id: 'ln-2', name: '亚麻棉混纺', nameEn: 'Linen Cotton Blend', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '柔软舒适', descriptionEn: 'Soft and comfortable' },
-      { id: 'ln-3', name: '亚麻粘胶', nameEn: 'Linen Viscose', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '光泽度好', descriptionEn: 'Good luster' },
-      { id: 'ln-4', name: '雨露麻面料', nameEn: 'Dew-retted Linen', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '高品质亚麻', descriptionEn: 'Premium linen' },
-    ],
+    dbCategory: '亚麻面料',
   },
   {
     id: 'wool',
@@ -292,12 +299,7 @@ const fabricMaterials: FabricMaterial[] = [
     ],
     applications: ['高档西装', '冬季制服', '职业套装', '大衣外套'],
     applicationsEn: ['Premium Suits', 'Winter Uniforms', 'Business Sets', 'Coats'],
-    products: [
-      { id: 'wl-1', name: '精纺羊毛面料', nameEn: 'Worsted Wool', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '细腻光滑', descriptionEn: 'Fine and smooth' },
-      { id: 'wl-2', name: '粗纺羊毛面料', nameEn: 'Woolen Fabric', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '厚实保暖', descriptionEn: 'Thick and warm' },
-      { id: 'wl-3', name: '羊毛涤纶混纺', nameEn: 'Wool Polyester', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '易打理', descriptionEn: 'Easy care' },
-      { id: 'wl-4', name: '羊绒面料', nameEn: 'Cashmere Fabric', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400', description: '奢华柔软', descriptionEn: 'Luxuriously soft' },
-    ],
+    dbCategory: '羊毛面料',
   },
 ];
 
@@ -309,50 +311,51 @@ export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [hoveredMaterial, setHoveredMaterial] = useState<string | null>(null);
-  const [aramidProducts, setAramidProducts] = useState<Product[]>([]);
+  const [productsByCategory, setProductsByCategory] = useState<Record<string, Product[]>>({});
   const [loading, setLoading] = useState(true);
   const [hoverTimeout, setHoverTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // 路由切换时重置所有状态
   useEffect(() => {
-    // 清理定时器
     if (hoverTimeout) {
       clearTimeout(hoverTimeout);
       setHoverTimeout(null);
     }
-    // 重置悬停状态
     setHoveredMaterial(null);
-    // 注意：保留 selectedMaterial 和 activeCategory，因为用户可能从首页直接跳转到特定分类
   }, [location.pathname]);
 
-  // 从 Payload CMS 获取芳纶产品
+  // 一次性拉取所有产品并按 category 分组
   useEffect(() => {
-    async function fetchAramidProducts() {
+    async function fetchAllProducts() {
       try {
-        const response = await fetchProducts({
-          category: '芳纶',
-          limit: 100,
-        });
+        const response = await fetchProducts({ limit: 500 });
 
         if (response.data) {
-          const formattedProducts: Product[] = response.data.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            nameEn: item.nameEn || item.name,
-            image: item.images?.[0]?.image?.url || item.coverImage?.url || 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400',
-            description: item.description || '',
-            descriptionEn: item.descriptionEn || item.description || '',
-          }));
-          setAramidProducts(formattedProducts);
+          const grouped: Record<string, Product[]> = {};
+          response.data.forEach((item: any) => {
+            const category = item.category || '';
+            if (!grouped[category]) {
+              grouped[category] = [];
+            }
+            grouped[category].push({
+              id: item.id,
+              name: item.name,
+              nameEn: item.nameEn || item.name,
+              image: item.images?.[0]?.image?.url || item.coverImage?.url || 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400',
+              description: item.description || '',
+              descriptionEn: item.descriptionEn || item.description || '',
+            });
+          });
+          setProductsByCategory(grouped);
         }
       } catch (err) {
-        console.error('获取芳纶产品失败:', err);
+        console.error('获取产品数据失败:', err);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchAramidProducts();
+    fetchAllProducts();
   }, []);
 
   const handleMaterialClick = (material: FabricMaterial) => {
@@ -372,7 +375,7 @@ export default function Products() {
   const handleMouseLeave = () => {
     const timeout = setTimeout(() => {
       setHoveredMaterial(null);
-    }, 450); // 450ms 延迟，给用户足够时间移动到子菜单并点击
+    }, 450);
     setHoverTimeout(timeout);
   };
 
@@ -396,6 +399,12 @@ export default function Products() {
     setSelectedMaterial(null);
     setSelectedProduct(null);
     setActiveCategory(null);
+  };
+
+  // 获取当前选中分类对应的产品列表
+  const getCurrentProducts = (): Product[] => {
+    if (!selectedMaterial) return [];
+    return productsByCategory[selectedMaterial.dbCategory] || [];
   };
 
   return (
@@ -427,6 +436,7 @@ export default function Products() {
           {fabricMaterials.map((material, index) => {
             const hasSubMenu = material.subMenu && material.subMenu.length > 0;
             const isHovered = hoveredMaterial === material.id;
+            const productCount = productsByCategory[material.dbCategory]?.length || 0;
             return (
               <motion.div
                 key={material.id}
@@ -447,19 +457,18 @@ export default function Products() {
                     {isZh ? material.name : material.nameEn}
                   </h3>
                   <p className="text-center text-xs text-gray-500">
-                    {material.products.length} {t('products.productCount')}
+                    {loading ? '...' : `${productCount} ${t('products.productCount')}`}
                   </p>
                 </div>
                 <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
 
-                {/* 子菜单 - 扩大触发区域，消除间隙 */}
+                {/* 子菜单 */}
                 {hasSubMenu && isHovered && (
                   <div
                     className="absolute left-0 right-0 top-full z-50"
                     onMouseEnter={handleSubMenuMouseEnter}
                     onMouseLeave={handleSubMenuMouseLeave}
                   >
-                    {/* 透明桥接区域，消除主菜单和子菜单之间的间隙 */}
                     <div className="h-4 w-full" />
                     <div className="bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-2xl border-2 border-blue-300 py-3 -mt-2">
                       <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-blue-50 border-t-2 border-l-2 border-blue-300 rotate-45"></div>
@@ -516,49 +525,64 @@ export default function Products() {
                 </button>
               </div>
 
-              {/* Dynamic Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {/* 如果该分类有dbCategory，使用从数据库获取的产品 */}
-                {(selectedMaterial.dbCategory === '芳纶' && aramidProducts.length > 0
-                  ? aramidProducts
-                  : selectedMaterial.products
-                ).map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={(e) => handleProductClick(product, e)}
-                    className="group cursor-pointer bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
-                  >
-                    <div className="aspect-square overflow-hidden bg-gray-200">
-                      <img
-                        src={product.image}
-                        alt={isZh ? product.name : product.nameEn}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-                        {isZh ? product.name : product.nameEn}
-                      </h4>
-                      <p className="text-sm text-gray-500 line-clamp-2">
-                        {isZh ? product.description : product.descriptionEn}
-                      </p>
-                      <div className="mt-3 flex items-center text-blue-600 text-sm font-medium">
-                        {t('products.viewDetails')}
-                        <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+              {/* Loading State */}
+              {loading ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-gray-100 rounded-xl overflow-hidden animate-pulse">
+                      <div className="aspect-square bg-gray-200" />
+                      <div className="p-4 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-3/4" />
+                        <div className="h-3 bg-gray-200 rounded w-full" />
                       </div>
                     </div>
-                  </motion.div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : getCurrentProducts().length === 0 ? (
+                <div className="text-center py-16">
+                  <p className="text-gray-500 text-lg">{isZh ? '该分类暂无产品' : 'No products in this category yet'}</p>
+                </div>
+              ) : (
+                /* Dynamic Grid */
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {getCurrentProducts().map((product, index) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={(e) => handleProductClick(product, e)}
+                      className="group cursor-pointer bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
+                    >
+                      <div className="aspect-square overflow-hidden bg-gray-200">
+                        <img
+                          src={product.image}
+                          alt={isZh ? product.name : product.nameEn}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                          {isZh ? product.name : product.nameEn}
+                        </h4>
+                        <p className="text-sm text-gray-500 line-clamp-2">
+                          {isZh ? product.description : product.descriptionEn}
+                        </p>
+                        <div className="mt-3 flex items-center text-blue-600 text-sm font-medium">
+                          {t('products.viewDetails')}
+                          <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Product Detail Modal with Material Animation */}
+      {/* Product Detail Modal */}
       <AnimatePresence>
         {selectedProduct && selectedMaterial && (
           <motion.div
@@ -577,9 +601,8 @@ export default function Products() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="grid md:grid-cols-2 h-full">
-                {/* Left: Image with Material Animation */}
+                {/* Left: Image */}
                 <div className="relative bg-gradient-to-br from-gray-100 to-gray-200 p-8 flex items-center justify-center overflow-hidden">
-                  {/* Animated background particles */}
                   <div className="absolute inset-0 overflow-hidden">
                     {[...Array(6)].map((_, i) => (
                       <motion.div
@@ -599,7 +622,6 @@ export default function Products() {
                     ))}
                   </div>
                   
-                  {/* Main product image with material texture animation */}
                   <motion.div
                     className="relative z-10"
                     initial={{ rotateY: -15 }}
@@ -613,7 +635,6 @@ export default function Products() {
                       whileHover={{ scale: 1.05, rotateY: 10 }}
                       transition={{ type: 'spring', stiffness: 200 }}
                     />
-                    {/* Material shine effect */}
                     <motion.div
                       className="absolute inset-0 rounded-xl bg-gradient-to-tr from-transparent via-white/30 to-transparent"
                       animate={{ x: ['-100%', '100%'] }}
@@ -621,7 +642,6 @@ export default function Products() {
                     />
                   </motion.div>
 
-                  {/* Material category badge */}
                   <div className="absolute top-4 left-4 flex items-center gap-2 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full text-sm font-medium text-blue-700">
                     {selectedMaterial.icon}
                     {isZh ? selectedMaterial.name : selectedMaterial.nameEn}
