@@ -272,7 +272,7 @@ export default function Products() {
       try {
         const response = await fetchProducts({ limit: 500 });
 
-        if (response.data) {
+        if (response.data && response.data.length > 0) {
           const grouped: Record<string, Product[]> = {};
           response.data.forEach((item: any) => {
             const category = item.category || '';
@@ -289,9 +289,12 @@ export default function Products() {
             });
           });
           setProductsByCategory(grouped);
+        } else {
+          setProductsByCategory({});
         }
       } catch (err) {
         console.error('获取产品数据失败:', err);
+        setProductsByCategory({});
       } finally {
         setLoading(false);
       }
