@@ -104,6 +104,8 @@ export const fetchProducts = async (params?: {
   search?: string;
 }) => {
   const queryParams = new URLSearchParams();
+  // depth=2 让 images 关联的 media 返回完整对象（含 url），否则只返回 ID
+  queryParams.set('depth', '2');
   if (params?.page) queryParams.set('page', params.page.toString());
   if (params?.limit) queryParams.set('limit', params.limit.toString());
   if (params?.category) queryParams.set('where[category][equals]', params.category);

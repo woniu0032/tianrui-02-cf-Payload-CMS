@@ -28,6 +28,7 @@ interface Product {
   image: string;
   description: string;
   descriptionEn: string;
+  price?: number;
 }
 
 const fabricMaterials: FabricMaterial[] = [
@@ -286,6 +287,7 @@ export default function Products() {
               image: item.images?.[0]?.image?.url || item.coverImage?.url || 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400',
               description: item.description || '',
               descriptionEn: item.descriptionEn || item.description || '',
+              price: item.price,
             });
           });
           setProductsByCategory(grouped);
@@ -644,67 +646,13 @@ export default function Products() {
                     </button>
                   </div>
 
-                  {/* Features */}
-                  <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
-                      {t('products.features')}
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {(isZh ? selectedMaterial.features : selectedMaterial.featuresEn).map((feature, i) => (
-                        <motion.span
-                          key={i}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: i * 0.1 }}
-                          className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
-                        >
-                          {feature}
-                        </motion.span>
-                      ))}
+                  {/* 后台真实字段：价格 */}
+                  {typeof selectedProduct.price === 'number' && (
+                    <div className="mb-8 flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                      <span className="text-sm text-gray-500">{isZh ? '价格' : 'Price'}</span>
+                      <span className="text-xl font-bold text-blue-700">¥{selectedProduct.price}</span>
                     </div>
-                  </div>
-
-                  {/* Specifications */}
-                  <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
-                      {t('products.specifications')}
-                    </h3>
-                    <div className="space-y-2">
-                      {selectedMaterial.specs.map((spec, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.1 }}
-                          className="flex justify-between py-2 border-b border-gray-100"
-                        >
-                          <span className="text-gray-500">{isZh ? spec.label : spec.labelEn}</span>
-                          <span className="font-medium text-gray-900">{spec.value}</span>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Applications */}
-                  <div className="mb-8">
-                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
-                      {t('products.applications')}
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(isZh ? selectedMaterial.applications : selectedMaterial.applicationsEn).map((app, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.1 }}
-                          className="flex items-center gap-2 text-sm text-gray-600"
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                          {app}
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
+                  )}
 
                   {/* Action Buttons */}
                   <div className="flex gap-3">
