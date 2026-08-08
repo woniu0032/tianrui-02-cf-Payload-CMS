@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { X, ChevronRight, Flame, Droplets, Shield, Zap, HeartPulse, Layers, Move, Sun, Palette, Leaf, CircleDot } from 'lucide-react';
-import { fetchProducts } from '../services/api';
+import { fetchProducts, API_BASE_URL, getHeaders } from '../services/api';
 
 interface FabricMaterial {
   id: string;
@@ -283,32 +283,45 @@ export default function Products() {
 
         if (response.data && response.data.length > 0) {
           const grouped: Record<string, Product[]> = {};
-          response.data.forEach((item: any) => {
+          for (const item of response.data) {
             const category = item.category || '';
             if (!grouped[category]) {
               grouped[category] = [];
             }
+
+            // 解析图片 URL：若 depth=2 未生效导致 image 为数字 ID，则主动请求 media 详情
+            let imageUrl = 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400';
+            const img = item.images?.[0]?.image;
+            if (typeof img === 'object' && img !== null && 'url' in img) {
+              imageUrl = img.url;
+            } else if (typeof img === 'string') {
+              imageUrl = img;
+            } else if (typeof img === 'number') {
+              // depth 未生效，image 是 media ID，需要单独请求
+              try {
+                const mediaRes = await fetch(`${API_BASE_URL}/api/media/${img}`, { headers: getHeaders(false) });
+                if (mediaRes.ok) {
+                  const mediaData = await mediaRes.json();
+                  imageUrl = mediaData.url || mediaData.sizes?.thumbnail?.url || imageUrl;
+                }
+              } catch (e) {
+                console.warn(`Failed to fetch media ${img}:`, e);
+              }
+            } else if (item.coverImage?.url) {
+              imageUrl = item.coverImage.url;
+            }
+
             grouped[category].push({
               id: item.id,
               name: item.name,
               nameEn: item.nameEn || item.name,
-              // Payload CMS v3 images 结构兼容：优先取 url，其次取整个 image 对象（若已是完整对象），最后回退占位图
-              image: (() => {
-                const img = item.images?.[0]?.image;
-                if (typeof img === 'object' && img !== null && 'url' in img) {
-                  return img.url;
-                }
-                if (typeof img === 'string') {
-                  return img;
-                }
-                return item.coverImage?.url || 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400';
-              })(),
+              image: imageUrl,
               description: item.description || '',
               descriptionEn: item.descriptionEn || item.description || '',
               price: item.price,
               attributes: item.attributes,
             });
-          });
+          }
           setProductsByCategory(grouped);
         } else {
           setProductsByCategory({});
