@@ -112,20 +112,28 @@ export const fetchProducts = async (params?: {
     queryParams.set('where[name][contains]', params.search);
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/products?${queryParams}`, {
-    headers: getHeaders(false),
-  });
-  if (!response.ok) throw new Error('Failed to fetch products');
-  const data = await response.json();
-  return {
-    data: data.docs.map(transformPayloadResponse),
-    pagination: {
-      page: data.page,
-      limit: data.limit,
-      total: data.totalDocs,
-      totalPages: data.totalPages,
-    },
-  };
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/products?${queryParams}`, {
+      headers: getHeaders(false),
+    });
+    if (!response.ok) {
+      console.warn('Products API not available, using default data');
+      return { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
+    }
+    const data = await response.json();
+    return {
+      data: data.docs.map(transformPayloadResponse),
+      pagination: {
+        page: data.page,
+        limit: data.limit,
+        total: data.totalDocs,
+        totalPages: data.totalPages,
+      },
+    };
+  } catch (error) {
+    console.warn('Products API request failed, using default data');
+    return { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
+  }
 };
 
 // 获取单个产品
