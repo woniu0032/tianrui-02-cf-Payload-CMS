@@ -2,6 +2,9 @@ import type { CollectionConfig } from 'payload'
 
 export const Media: CollectionConfig = {
   slug: 'media',
+  access: {
+    read: () => true, // 公开读取，允许前端获取图片 URL
+  },
   upload: {
     staticDir: '../../uploads',
     mimeTypes: [
