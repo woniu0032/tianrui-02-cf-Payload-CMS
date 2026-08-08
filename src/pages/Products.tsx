@@ -29,6 +29,14 @@ interface Product {
   description: string;
   descriptionEn: string;
   price?: number;
+  attributes?: {
+    specifications?: { label: string; value: string }[];
+    materials?: { item: string }[];
+    colors?: { item: string }[];
+    features?: { item: string }[];
+    techParams?: { label: string; value: string }[];
+    applications?: { item: string }[];
+  };
 }
 
 const fabricMaterials: FabricMaterial[] = [
@@ -284,10 +292,21 @@ export default function Products() {
               id: item.id,
               name: item.name,
               nameEn: item.nameEn || item.name,
-              image: item.images?.[0]?.image?.url || item.coverImage?.url || 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400',
+              // Payload CMS v3 images 结构兼容：优先取 url，其次取整个 image 对象（若已是完整对象），最后回退占位图
+              image: (() => {
+                const img = item.images?.[0]?.image;
+                if (typeof img === 'object' && img !== null && 'url' in img) {
+                  return img.url;
+                }
+                if (typeof img === 'string') {
+                  return img;
+                }
+                return item.coverImage?.url || 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400';
+              })(),
               description: item.description || '',
               descriptionEn: item.descriptionEn || item.description || '',
               price: item.price,
+              attributes: item.attributes,
             });
           });
           setProductsByCategory(grouped);
@@ -648,9 +667,113 @@ export default function Products() {
 
                   {/* 后台真实字段：价格 */}
                   {typeof selectedProduct.price === 'number' && (
-                    <div className="mb-8 flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                    <div className="mb-6 flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
                       <span className="text-sm text-gray-500">{isZh ? '价格' : 'Price'}</span>
                       <span className="text-xl font-bold text-blue-700">¥{selectedProduct.price}</span>
+                    </div>
+                  )}
+
+                  {/* 后台填写的产品属性 */}
+                  {selectedProduct.attributes && (
+                    <div className="space-y-5 mb-8">
+                      {/* 规格参数 */}
+                      {selectedProduct.attributes.specifications && selectedProduct.attributes.specifications.length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+                            {t('products.specifications')}
+                          </h3>
+                          <div className="space-y-2">
+                            {selectedProduct.attributes.specifications.map((spec, i) => (
+                              <div key={i} className="flex justify-between py-2 border-b border-gray-100">
+                                <span className="text-gray-500">{spec.label}</span>
+                                <span className="font-medium text-gray-900">{spec.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 材质 */}
+                      {selectedProduct.attributes.materials && selectedProduct.attributes.materials.length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+                            {isZh ? '材质' : 'Materials'}
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedProduct.attributes.materials.map((m, i) => (
+                              <span key={i} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                                {m.item}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 颜色 */}
+                      {selectedProduct.attributes.colors && selectedProduct.attributes.colors.length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+                            {isZh ? '颜色' : 'Colors'}
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedProduct.attributes.colors.map((c, i) => (
+                              <span key={i} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
+                                {c.item}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 特点 */}
+                      {selectedProduct.attributes.features && selectedProduct.attributes.features.length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+                            {t('products.features')}
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedProduct.attributes.features.map((f, i) => (
+                              <span key={i} className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm">
+                                {f.item}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 技术参数 */}
+                      {selectedProduct.attributes.techParams && selectedProduct.attributes.techParams.length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+                            {isZh ? '技术参数' : 'Tech Parameters'}
+                          </h3>
+                          <div className="space-y-2">
+                            {selectedProduct.attributes.techParams.map((tp, i) => (
+                              <div key={i} className="flex justify-between py-2 border-b border-gray-100">
+                                <span className="text-gray-500">{tp.label}</span>
+                                <span className="font-medium text-gray-900">{tp.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 应用场景 */}
+                      {selectedProduct.attributes.applications && selectedProduct.attributes.applications.length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+                            {t('products.applications')}
+                          </h3>
+                          <div className="grid grid-cols-2 gap-2">
+                            {selectedProduct.attributes.applications.map((app, i) => (
+                              <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                {app.item}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
