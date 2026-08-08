@@ -41,6 +41,9 @@ export default buildConfig({
     'https://tianrui-textile.pages.dev',
     'https://tianrui-textile.com',
     'https://www.tianrui-textile.com',
+    // 正式生产域名
+    'https://www.hyfsad.com',
+    'https://hyfsad.com',
     // 允许所有子域名（生产环境建议限制为具体域名）
     ...(process.env.CORS_ORIGINS?.split(',') || []),
   ].filter(Boolean),
@@ -50,6 +53,9 @@ export default buildConfig({
     'https://tianrui-textile.pages.dev',
     'https://tianrui-textile.com',
     'https://www.tianrui-textile.com',
+    // 正式生产域名
+    'https://www.hyfsad.com',
+    'https://hyfsad.com',
     ...(process.env.CSRF_ORIGINS?.split(',') || []),
   ].filter(Boolean),
   upload: {
