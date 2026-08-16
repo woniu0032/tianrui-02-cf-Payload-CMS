@@ -140,7 +140,8 @@ export const fetchProducts = async (params?: {
 
 // 获取单个产品
 export const fetchProductById = async (id: string) => {
-  const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
+  // depth=2 让 content(richText) 和 layout(blocks) 中的 media 关联返回完整对象
+  const response = await fetch(`${API_BASE_URL}/api/products/${id}?depth=2`, {
     headers: getHeaders(false),
   });
   if (!response.ok) throw new Error('Failed to fetch product');
@@ -359,15 +360,15 @@ export const deleteForm = async (id: string) => {
 };
 
 // 创建聊天会话
-export const createChatSession = async (userId?: string) => {
+export const createChatSession = async (sessionId: string, userId?: string) => {
   const response = await fetch(`${API_BASE_URL}/api/chat-sessions`, {
     method: 'POST',
     headers: getHeaders(false),
-    body: JSON.stringify({ userId }),
+    body: JSON.stringify({ sessionId, userId }),
   });
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Failed to create chat session');
+    throw new Error(error.errors?.[0]?.message || error.message || 'Failed to create chat session');
   }
   const data = await response.json();
   return transformPayloadResponse(data.doc);
