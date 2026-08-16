@@ -1,0 +1,26 @@
+[
+  {
+    "content": "扩展 Product 接口添加 attributes 字段",
+    "id": "1",
+    "priority": "high",
+    "status": "completed"
+  },
+  {
+    "content": "修改数据映射逻辑，保留完整的 attributes 对象",
+    "id": "2",
+    "priority": "high",
+    "status": "completed"
+  },
+  {
+    "content": "详情弹窗展示后台填写的规格参数/颜色/特点/技术参数/应用场景",
+    "id": "3",
+    "priority": "high",
+    "status": "completed"
+  },
+  {
+    "content": "构建验证 pnpm run build + pnpm run dev",
+    "id": "4",
+    "priority": "high",
+    "status": "completed"
+  }
+]

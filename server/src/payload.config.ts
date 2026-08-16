@@ -10,6 +10,7 @@ import { Products } from './collections/Products'
 import { News } from './collections/News'
 import { FormSubmissions } from './collections/FormSubmissions'
 import { ChatSessions } from './collections/ChatSessions'
+import { EmailNotifications } from './collections/EmailNotifications'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -21,7 +22,7 @@ export default buildConfig({
       titleSuffix: '- Tianrui Admin',
     },
   },
-  collections: [Users, Media, Products, News, FormSubmissions, ChatSessions],
+  collections: [Users, Media, Products, News, FormSubmissions, ChatSessions, EmailNotifications],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || 'tianrui-payload-secret-key-2024',
   typescript: {
@@ -31,7 +32,7 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
     },
-    push: true, // 首次部署时启用自动 schema 同步创建表结构
+    push: false, // 生产环境关闭 push，使用 migration 管理 schema
   }),
   serverURL: process.env.PAYLOAD_PUBLIC_SERVER_URL || 'http://localhost:8080',
   cors: [

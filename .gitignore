@@ -101,10 +101,3 @@ tmp/
 /core
 /.core.hmbtNy
 /.core.dump
-
-# Meoo 平台临时文件
-.todo/
-.plan/
-.microcompact/
-.meoo-cloud-snapshot.json
-.meoo-manifest.json

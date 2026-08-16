@@ -9,9 +9,9 @@ import About from './pages/About';
 import Products from './pages/Products';
 import Honors from './pages/Honors';
 import Factory from './pages/Factory';
-import Message from './pages/Message';
 import Contact from './pages/Contact';
 import ProductDetail from './pages/ProductDetail';
+import NewsDetail from './pages/NewsDetail';
 import Inquiry from './pages/Inquiry';
 import AdminLogin from './pages/AdminLogin';
 import AdminProducts from './pages/AdminProducts';
@@ -43,9 +43,9 @@ function AppContent() {
           <Route path="/about" element={<About />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/news/:id" element={<NewsDetail />} />
           <Route path="/honors" element={<Honors />} />
           <Route path="/factory" element={<Factory />} />
-          <Route path="/message" element={<Message />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/inquiry" element={<Inquiry />} />
           {/* 管理后台路由 */}

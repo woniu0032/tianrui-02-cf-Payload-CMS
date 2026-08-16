@@ -29,6 +29,9 @@ importers:
       next:
         specifier: 16.2.12
         version: 16.2.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.77.4)
+      nodemailer:
+        specifier: ^9.0.5
+        version: 9.0.5
       payload:
         specifier: latest
         version: 3.86.0(graphql@16.14.2)(typescript@5.9.3)
@@ -2086,8 +2089,8 @@ packages:
       encoding:
         optional: true
 
-  nodemailer@9.0.3:
-    resolution: {integrity: sha512-n+YP+NKwR5zRWa60k3GiQ6Q3B4KXCoAw40dAKeCtYn020iNN74aWK2liXIC3ZEATeGql7we3tE3t8QwhY0eskw==}
+  nodemailer@9.0.5:
+    resolution: {integrity: sha512-wvjiKvjczmsN7U/8006JOdXubgBk2XFAbioDMbT+sM7cPs0QrhJTa6KBRX7P5REGGkDcLUz/EarWidb8G8C1jQ==}
     engines: {node: '>=6.0.0'}
 
   normalize-path@3.0.0:
@@ -3747,7 +3750,7 @@ snapshots:
 
   '@payloadcms/email-nodemailer@3.86.0(payload@3.86.0(graphql@16.14.2)(typescript@5.9.3))':
     dependencies:
-      nodemailer: 9.0.3
+      nodemailer: 9.0.5
       payload: 3.86.0(graphql@16.14.2)(typescript@5.9.3)
 
   '@payloadcms/graphql@3.86.0(graphql@16.14.2)(payload@3.86.0(graphql@16.14.2)(typescript@5.9.3))(typescript@5.9.3)':
@@ -3798,7 +3801,7 @@ snapshots:
       '@aws-sdk/lib-storage': 3.1096.0(@aws-sdk/client-s3@3.1096.0)
       '@payloadcms/email-nodemailer': 3.86.0(payload@3.86.0(graphql@16.14.2)(typescript@5.9.3))
       amazon-cognito-identity-js: 6.3.20
-      nodemailer: 9.0.3
+      nodemailer: 9.0.5
       payload: 3.86.0(graphql@16.14.2)(typescript@5.9.3)
     transitivePeerDependencies:
       - encoding
@@ -4880,7 +4883,7 @@ snapshots:
     dependencies:
       whatwg-url: 5.0.0
 
-  nodemailer@9.0.3: {}
+  nodemailer@9.0.5: {}
 
   normalize-path@3.0.0: {}
 

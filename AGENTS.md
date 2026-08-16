@@ -1,4 +1,4 @@
-# AGENTS.md - Tianrui Textile Payload CMS Migration
+按# AGENTS.md - Tianrui Textile Payload CMS Migration
 
 ## Dependencies
 
@@ -31,6 +31,7 @@
 - ❌ `payload start` / `payload build` 命令 → v3 不存在；scripts 用 `next build` / `next start`
 - ❌ PostgreSQL `select` 字段建枚举冲突 → 全改 `text`
 - ❌ `push: true` 在 `next start` 生产模式不自动建表 → 空库初始化须用 `npx payload migrate:create init` + `npx payload migrate`
+- ❌ 字段类型变更后直接 `migrate:create` 可能生成 DROP COLUMN 破坏数据 → 涉及 json→blocks 等结构性变更时，手写迁移文件（CREATE TABLE + INSERT SELECT + UPDATE），`content` json→richText 底层仍为 jsonb 列无需 DDL
 - ❌ `npx payload db:push` → v3 无此命令；`migrate --force` 无 migration 目录时无输出
 - ❌ Next.js 16 Turbopack + 项目根有 `package.json`/`pnpm-lock.yaml` → workspace root 误判，`turbopack.root`/`outputFileTracingRoot` 均无效 → 删除根目录 lockfile + 手动 API route 文件后构建通过
 - ❌ 手动创建 `api/[...slug]/route.ts` 等路由文件 → Payload v3.86.0 的 `@payloadcms/next/routes` 不再导出 `restHandler`/`graphQLHandler`，由 `withPayload` 自动挂载 → 删除手动路由文件

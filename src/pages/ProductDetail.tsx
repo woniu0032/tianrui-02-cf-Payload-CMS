@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
-import { ArrowLeft, ShoppingCart, FileText, ChevronLeft, ChevronRight, Shield, Flame, Droplets, Zap } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, FileText, ChevronLeft, ChevronRight, Shield, Flame, Droplets, Zap, Play, Image as ImageIcon } from 'lucide-react';
 import { fetchProductById, fetchProducts } from '../services/api';
 
 interface ProductSpec {
@@ -17,6 +17,81 @@ interface ProductImage {
   type: 'main' | 'detail';
 }
 
+// Payload Lexical richText node types
+interface LexicalTextNode {
+  type: 'text';
+  text: string;
+  format: number;
+  detail: number;
+  mode: string;
+  style: string;
+}
+
+interface LexicalElementNode {
+  type: string;
+  children: (LexicalTextNode | LexicalElementNode)[];
+  format?: string;
+  tag?: string;
+  indent?: number;
+  direction?: string;
+}
+
+interface LexicalRootNode {
+  type: 'root';
+  children: LexicalElementNode[];
+  direction: string;
+  format: string;
+  indent: number;
+  version: number;
+}
+
+interface LexicalContent {
+  root: LexicalRootNode;
+}
+
+// Block types
+interface ImageTextBlock {
+  blockType: 'imageText';
+  image?: { url: string };
+  title?: string;
+  content?: string;
+  imagePosition?: 'left' | 'right';
+}
+
+interface VideoBlock {
+  blockType: 'video';
+  videoUrl?: string;
+  title?: string;
+}
+
+interface SpecTableRow {
+  label: string;
+  value: string;
+}
+
+interface SpecTableBlock {
+  blockType: 'specTable';
+  title?: string;
+  rows?: SpecTableRow[];
+}
+
+interface RichTextBlock {
+  blockType: 'richText';
+  content?: LexicalContent;
+}
+
+interface GalleryImage {
+  image?: { url: string };
+  caption?: string;
+}
+
+interface GalleryBlock {
+  blockType: 'gallery';
+  images?: GalleryImage[];
+}
+
+type LayoutBlock = ImageTextBlock | VideoBlock | SpecTableBlock | RichTextBlock | GalleryBlock;
+
 interface ProductData {
   id: string;
   name: string;
@@ -30,6 +105,8 @@ interface ProductData {
   featuresEn: string[];
   category: string;
   categoryEn: string;
+  content?: LexicalContent;
+  layout?: LayoutBlock[];
 }
 
 const staticProducts = [
@@ -37,6 +114,184 @@ const staticProducts = [
   { id: '2', name: '防水透气面料', nameEn: 'Waterproof Breathable Fabric', category: 'waterproof', desc: '三层复合结构', descEn: '3-layer composite', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600' },
   { id: '3', name: '抗静电面料', nameEn: 'Antistatic Fabric', category: 'antistatic', desc: '永久性抗静电处理', descEn: 'Permanent antistatic', image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600' },
 ];
+
+// Render Lexical richText to HTML
+function renderLexicalNode(node: LexicalTextNode | LexicalElementNode): React.ReactNode {
+  if (node.type === 'text') {
+    const textNode = node as LexicalTextNode;
+    let content: React.ReactNode = textNode.text;
+    
+    // Apply formatting based on format bitmask
+    if (textNode.format & 1) content = <strong>{content}</strong>;
+    if (textNode.format & 2) content = <em>{content}</em>;
+    if (textNode.format & 4) content = <u>{content}</u>;
+    if (textNode.format & 8) content = <s>{content}</s>;
+    
+    return content;
+  }
+
+  const elementNode = node as LexicalElementNode;
+  const children = elementNode.children.map((child, i) => (
+    <React.Fragment key={i}>{renderLexicalNode(child)}</React.Fragment>
+  ));
+
+  switch (elementNode.type) {
+    case 'paragraph':
+      return <p className="mb-4 last:mb-0">{children}</p>;
+    case 'heading':
+      const Tag = elementNode.tag || 'h2';
+      const headingClass = Tag === 'h2' ? 'text-2xl font-bold mb-4 mt-6' : 
+                          Tag === 'h3' ? 'text-xl font-semibold mb-3 mt-5' : 
+                          'text-lg font-medium mb-2 mt-4';
+      return <Tag className={headingClass}>{children}</Tag>;
+    case 'list':
+      const ListTag = elementNode.format === 'bullet' ? 'ul' : 'ol';
+      return <ListTag className="list-disc pl-6 mb-4 space-y-1">{children}</ListTag>;
+    case 'listitem':
+      return <li>{children}</li>;
+    case 'link':
+      return <a href={(elementNode as any).url} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>;
+    default:
+      return <div>{children}</div>;
+  }
+}
+
+function LexicalRichText({ content }: { content?: LexicalContent }) {
+  if (!content?.root?.children?.length) return null;
+  
+  return (
+    <div className="prose prose-slate max-w-none">
+      {content.root.children.map((node, i) => (
+        <React.Fragment key={i}>{renderLexicalNode(node)}</React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+// Render individual layout blocks
+function ImageTextBlockComponent({ block }: { block: ImageTextBlock }) {
+  const isLeft = block.imagePosition !== 'right';
+  
+  return (
+    <div className={`grid md:grid-cols-2 gap-8 items-center ${isLeft ? '' : 'md:flex-row-reverse'}`}>
+      <div className="aspect-video bg-slate-100 rounded-xl overflow-hidden">
+        {block.image?.url ? (
+          <img src={block.image.url} alt={block.title || ''} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-slate-400">
+            <ImageIcon className="w-12 h-12" />
+          </div>
+        )}
+      </div>
+      <div>
+        {block.title && <h3 className="text-xl font-bold text-slate-900 mb-3">{block.title}</h3>}
+        {block.content && <p className="text-slate-600 leading-relaxed">{block.content}</p>}
+      </div>
+    </div>
+  );
+}
+
+function VideoBlockComponent({ block }: { block: VideoBlock }) {
+  return (
+    <div className="space-y-4">
+      {block.title && <h3 className="text-xl font-bold text-slate-900">{block.title}</h3>}
+      {block.videoUrl ? (
+        <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden">
+          <iframe 
+            src={block.videoUrl} 
+            className="w-full h-full"
+            allowFullScreen
+            title={block.title || 'Video'}
+          />
+        </div>
+      ) : (
+        <div className="aspect-video bg-slate-100 rounded-xl flex items-center justify-center">
+          <Play className="w-16 h-16 text-slate-400" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SpecTableBlockComponent({ block }: { block: SpecTableBlock }) {
+  return (
+    <div className="space-y-4">
+      {block.title && <h3 className="text-xl font-bold text-slate-900">{block.title}</h3>}
+      {block.rows && block.rows.length > 0 ? (
+        <div className="border border-slate-200 rounded-xl overflow-hidden">
+          <table className="w-full">
+            <tbody>
+              {block.rows.map((row, i) => (
+                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                  <td className="px-6 py-3 font-medium text-slate-700 border-b border-slate-200 w-1/3">{row.label}</td>
+                  <td className="px-6 py-3 text-slate-600 border-b border-slate-200">{row.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="text-slate-400 italic">暂无参数数据</p>
+      )}
+    </div>
+  );
+}
+
+function RichTextBlockComponent({ block }: { block: RichTextBlock }) {
+  return <LexicalRichText content={block.content} />;
+}
+
+function GalleryBlockComponent({ block }: { block: GalleryBlock }) {
+  return (
+    <div className="space-y-4">
+      {block.images && block.images.length > 0 ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {block.images.map((img, i) => (
+            <div key={i} className="space-y-2">
+              <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden">
+                {img.image?.url ? (
+                  <img src={img.image.url} alt={img.caption || ''} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-400">
+                    <ImageIcon className="w-8 h-8" />
+                  </div>
+                )}
+              </div>
+              {img.caption && <p className="text-sm text-slate-500 text-center">{img.caption}</p>}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-slate-400 italic">暂无图片</p>
+      )}
+    </div>
+  );
+}
+
+function LayoutBlocksRenderer({ blocks }: { blocks?: LayoutBlock[] }) {
+  if (!blocks || blocks.length === 0) return null;
+  
+  return (
+    <div className="space-y-12">
+      {blocks.map((block, i) => {
+        switch (block.blockType) {
+          case 'imageText':
+            return <ImageTextBlockComponent key={i} block={block as ImageTextBlock} />;
+          case 'video':
+            return <VideoBlockComponent key={i} block={block as VideoBlock} />;
+          case 'specTable':
+            return <SpecTableBlockComponent key={i} block={block as SpecTableBlock} />;
+          case 'richText':
+            return <RichTextBlockComponent key={i} block={block as RichTextBlock} />;
+          case 'gallery':
+            return <GalleryBlockComponent key={i} block={block as GalleryBlock} />;
+          default:
+            return null;
+        }
+      })}
+    </div>
+  );
+}
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -96,6 +351,8 @@ export default function ProductDetail() {
             featuresEn: attributes.features?.map((f: any) => f.itemEn) || ['Flame Retardant', 'Oil Resistant', 'Waterproof', 'Anti-static'],
             category: productData.category,
             categoryEn: productData.categoryEn || productData.category,
+            content: productData.content,
+            layout: productData.layout,
           });
 
           // 获取相关产品
@@ -384,10 +641,13 @@ export default function ProductDetail() {
                 transition={{ delay: 0.4 }}
                 className="flex gap-4 pt-4"
               >
-                <motion.button 
+                <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => navigate('/inquiry')} 
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    setTimeout(() => navigate('/inquiry'), 300);
+                  }}
                   className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
                 >
                   <ShoppingCart className="w-5 h-5" />
@@ -406,12 +666,40 @@ export default function ProductDetail() {
           </div>
         </motion.div>
 
+        {/* 富文本内容区域 */}
+        {product.content && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-12 bg-white rounded-2xl shadow-lg p-8 lg:p-12"
+          >
+            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+              <span className="w-1 h-6 bg-blue-600 rounded-full"></span>
+              {t('productDetail.productDescription') || '产品介绍'}
+            </h2>
+            <LexicalRichText content={product.content} />
+          </motion.div>
+        )}
+
+        {/* 页面布局 Blocks 区域 */}
+        {product.layout && product.layout.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mt-12 bg-white rounded-2xl shadow-lg p-8 lg:p-12"
+          >
+            <LayoutBlocksRenderer blocks={product.layout} />
+          </motion.div>
+        )}
+
         {/* 相关产品 */}
         {displayRelated.length > 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.7 }}
             className="mt-16"
           >
             <div className="flex items-center gap-3 mb-8">
@@ -424,7 +712,7 @@ export default function ProductDetail() {
                   key={item.id} 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 + i * 0.1 }}
+                  transition={{ delay: 0.8 + i * 0.1 }}
                   whileHover={{ y: -5 }}
                   onClick={() => navigate(`/products/${item.id}`)} 
                   className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-xl transition-all border border-slate-100"

@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { sendChatNotification } from '../utils/sendChatNotification'
 
 export const ChatSessions: CollectionConfig = {
   slug: 'chat-sessions',
@@ -10,6 +11,36 @@ export const ChatSessions: CollectionConfig = {
   access: {
     read: () => true,
     create: () => true,
+    update: () => true,
+  },
+  hooks: {
+    afterChange: [
+      async ({ doc, previousDoc }) => {
+        // 检测是否有新消息
+        const currentMessages = doc.messages || []
+        const previousMessages = previousDoc?.messages || []
+        const hasNewMessage = currentMessages.length > previousMessages.length
+
+        if (!hasNewMessage) return
+
+        const lastMessage = currentMessages[currentMessages.length - 1]
+
+        // 只通知用户发送的消息（role === 'user'）
+        if (lastMessage.role !== 'user') return
+
+        try {
+          await sendChatNotification({
+            sessionId: doc.sessionId,
+            customerMessage: lastMessage.content,
+            timestamp: lastMessage.timestamp,
+            messageCount: currentMessages.length,
+          })
+        } catch (error) {
+          console.error('[ChatSessions] Failed to send email notification:', error)
+          // 不阻塞主流程，仅记录错误
+        }
+      },
+    ],
   },
   fields: [
     {

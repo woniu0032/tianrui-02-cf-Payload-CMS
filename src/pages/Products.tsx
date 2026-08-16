@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { X, ChevronRight, Flame, Droplets, Shield, Zap, HeartPulse, Layers, Move, Sun, Palette, Leaf, CircleDot } from 'lucide-react';
+import { X, ChevronRight, Flame, Droplets, Shield, Zap, HeartPulse, Layers, Move, Sun, Palette, Leaf, CircleDot, Send } from 'lucide-react';
 import { fetchProducts, API_BASE_URL, getHeaders } from '../services/api';
 
 interface FabricMaterial {
@@ -21,6 +21,15 @@ interface FabricMaterial {
   dbCategory: string; // 对应后台 Payload CMS 的 category 字段值
 }
 
+interface LexicalContent {
+  root?: { children?: any[] };
+}
+
+interface LayoutBlock {
+  blockType: string;
+  [key: string]: any;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -29,6 +38,8 @@ interface Product {
   description: string;
   descriptionEn: string;
   price?: number;
+  content?: LexicalContent;
+  layout?: LayoutBlock[];
   attributes?: {
     specifications?: { label: string; value: string }[];
     materials?: { item: string }[];
@@ -257,33 +268,35 @@ export default function Products() {
   const { language, t } = useLanguage();
   const isZh = language === 'zh';
   const location = useLocation();
+  const navigate = useNavigate();
   const [selectedMaterial, setSelectedMaterial] = useState<FabricMaterial | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
-  const [hoveredMaterial, setHoveredMaterial] = useState<string | null>(null);
   const [productsByCategory, setProductsByCategory] = useState<Record<string, Product[]>>({});
   const [loading, setLoading] = useState(true);
-  const [hoverTimeout, setHoverTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // 路由切换时重置所有状态
   useEffect(() => {
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
-      setHoverTimeout(null);
-    }
-    setHoveredMaterial(null);
+    setSelectedMaterial(null);
+    setSelectedProduct(null);
+    setActiveCategory(null);
+    setActiveSubCategory(null);
   }, [location.pathname]);
 
   // 一次性拉取所有产品并按 category 分组
   useEffect(() => {
     async function fetchAllProducts() {
       try {
-        const response = await fetchProducts({ limit: 500 });
+        // depth=2 让 content(richText) 和 layout(blocks) 中的 media 关联返回完整对象
+        const response = await fetch(`${API_BASE_URL}/api/products?limit=500&depth=2`, { headers: getHeaders(false) });
+        if (!response.ok) throw new Error('Failed to fetch products');
+        const data = await response.json();
+        const docs = data.docs || [];
 
-        if (response.data && response.data.length > 0) {
+        if (docs && docs.length > 0) {
           const grouped: Record<string, Product[]> = {};
-          for (const item of response.data) {
+          for (const item of docs) {
             const category = item.category || '';
             if (!grouped[category]) {
               grouped[category] = [];
@@ -319,6 +332,8 @@ export default function Products() {
               description: item.description || '',
               descriptionEn: item.descriptionEn || item.description || '',
               price: item.price,
+              content: item.content,
+              layout: item.layout,
               attributes: item.attributes,
             });
           }
@@ -343,43 +358,13 @@ export default function Products() {
     setActiveSubCategory(subCategory || null);
   };
 
-  // 子菜单延迟消失处理
-  const handleMouseEnter = (materialId: string) => {
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
-      setHoverTimeout(null);
-    }
-    setHoveredMaterial(materialId);
-  };
-
-  const handleMouseLeave = () => {
-    const timeout = setTimeout(() => {
-      setHoveredMaterial(null);
-    }, 450);
-    setHoverTimeout(timeout);
-  };
-
-  const handleSubMenuMouseEnter = () => {
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
-      setHoverTimeout(null);
-    }
-  };
-
-  const handleSubMenuMouseLeave = () => {
-    setHoveredMaterial(null);
-  };
-
   const handleProductClick = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedProduct(product);
   };
 
   const closeModal = () => {
-    setSelectedMaterial(null);
     setSelectedProduct(null);
-    setActiveCategory(null);
-    setActiveSubCategory(null);
   };
 
   // 获取当前选中分类对应的产品列表
@@ -433,8 +418,7 @@ export default function Products() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {fabricMaterials.map((material, index) => {
             const hasSubMenu = material.subMenu && material.subMenu.length > 0;
-            const isHovered = hoveredMaterial === material.id;
-            const productCount = hasSubMenu 
+            const productCount = hasSubMenu
               ? material.subMenu!.reduce((sum, sub) => sum + (productsByCategory[sub.dbCategory]?.length || 0), 0)
               : (productsByCategory[material.dbCategory]?.length || 0);
             return (
@@ -443,12 +427,11 @@ export default function Products() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                onMouseEnter={() => hasSubMenu && handleMouseEnter(material.id)}
-                onMouseLeave={handleMouseLeave}
                 className={`relative group cursor-pointer bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border-2 ${
                   activeCategory === material.id ? 'border-blue-500 ring-2 ring-blue-200' : 'border-transparent'
-                } ${hasSubMenu ? '' : 'overflow-hidden'}`}
+                }`}
               >
+                {/* 主菜单内容 */}
                 <div onClick={() => handleMaterialClick(material)} className="p-6">
                   <div className="flex items-center justify-center w-14 h-14 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white group-hover:scale-110 transition-transform duration-300">
                     {material.icon}
@@ -462,16 +445,13 @@ export default function Products() {
                 </div>
                 <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
 
-                {/* 子菜单 */}
-                {hasSubMenu && isHovered && (
-                  <div
-                    className="absolute left-0 right-0 top-full z-50"
-                    onMouseEnter={handleSubMenuMouseEnter}
-                    onMouseLeave={handleSubMenuMouseLeave}
-                  >
-                    <div className="h-4 w-full" />
-                    <div className="bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-2xl border-2 border-blue-300 py-3 -mt-2">
-                      <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-blue-50 border-t-2 border-l-2 border-blue-300 rotate-45"></div>
+                {/* 子菜单 - 纯CSS hover控制，无需JS定时器 */}
+                {hasSubMenu && (
+                  <div className="absolute left-0 right-0 top-full z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    {/* 透明桥接区域 - 32px高确保鼠标平滑过渡 */}
+                    <div className="h-8 w-full" />
+                    <div className="bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-2xl border-2 border-blue-300 py-3 -mt-1">
+                      <div className="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-blue-50 border-t-2 border-l-2 border-blue-300 rotate-45"></div>
                       {material.subMenu!.map((subItem, subIdx) => (
                         <div
                           key={subIdx}
@@ -690,7 +670,7 @@ export default function Products() {
                   {selectedProduct.attributes && (
                     <div className="space-y-5 mb-8">
                       {/* 规格参数 */}
-                      {selectedProduct.attributes.specifications && selectedProduct.attributes.specifications.length > 0 && (
+                      {selectedProduct.attributes.specifications && selectedProduct.attributes.specifications.length > 0 && selectedProduct.attributes.specifications.some(s => s.value) && (
                         <div>
                           <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
                             {t('products.specifications')}
@@ -707,7 +687,7 @@ export default function Products() {
                       )}
 
                       {/* 材质 */}
-                      {selectedProduct.attributes.materials && selectedProduct.attributes.materials.length > 0 && (
+                      {selectedProduct.attributes.materials && selectedProduct.attributes.materials.length > 0 && selectedProduct.attributes.materials.some(m => m.item) && (
                         <div>
                           <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
                             {isZh ? '材质' : 'Materials'}
@@ -723,7 +703,7 @@ export default function Products() {
                       )}
 
                       {/* 颜色 */}
-                      {selectedProduct.attributes.colors && selectedProduct.attributes.colors.length > 0 && (
+                      {selectedProduct.attributes.colors && selectedProduct.attributes.colors.length > 0 && selectedProduct.attributes.colors.some(c => c.item) && (
                         <div>
                           <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
                             {isZh ? '颜色' : 'Colors'}
@@ -739,7 +719,7 @@ export default function Products() {
                       )}
 
                       {/* 特点 */}
-                      {selectedProduct.attributes.features && selectedProduct.attributes.features.length > 0 && (
+                      {selectedProduct.attributes.features && selectedProduct.attributes.features.length > 0 && selectedProduct.attributes.features.some(f => f.item) && (
                         <div>
                           <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
                             {t('products.features')}
@@ -755,7 +735,7 @@ export default function Products() {
                       )}
 
                       {/* 技术参数 */}
-                      {selectedProduct.attributes.techParams && selectedProduct.attributes.techParams.length > 0 && (
+                      {selectedProduct.attributes.techParams && selectedProduct.attributes.techParams.length > 0 && selectedProduct.attributes.techParams.some(tp => tp.value) && (
                         <div>
                           <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
                             {isZh ? '技术参数' : 'Tech Parameters'}
@@ -772,7 +752,7 @@ export default function Products() {
                       )}
 
                       {/* 应用场景 */}
-                      {selectedProduct.attributes.applications && selectedProduct.attributes.applications.length > 0 && (
+                      {selectedProduct.attributes.applications && selectedProduct.attributes.applications.length > 0 && selectedProduct.attributes.applications.some(a => a.item) && (
                         <div>
                           <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
                             {t('products.applications')}
@@ -790,21 +770,116 @@ export default function Products() {
                     </div>
                   )}
 
+                  {/* 富文本内容 */}
+                  {selectedProduct.content?.root?.children && selectedProduct.content.root.children.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+                        {isZh ? '产品介绍' : 'Description'}
+                      </h3>
+                      <div className="prose prose-sm max-w-none text-gray-600">
+                        {selectedProduct.content.root.children.map((node: any, i: number) => {
+                          if (node.type === 'paragraph') {
+                            return <p key={i} className="mb-2 last:mb-0">{node.children?.map((c: any) => c.text).join('')}</p>;
+                          }
+                          if (node.type === 'heading') {
+                            const Tag = node.tag || 'h3';
+                            return <Tag key={i} className="font-bold mb-2">{node.children?.map((c: any) => c.text).join('')}</Tag>;
+                          }
+                          return null;
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Layout Blocks */}
+                  {selectedProduct.layout && selectedProduct.layout.length > 0 && (
+                    <div className="mb-6 space-y-4">
+                      {selectedProduct.layout.map((block: any, i: number) => {
+                        if (block.blockType === 'imageText') {
+                          return (
+                            <div key={i} className="grid grid-cols-2 gap-4 items-center">
+                              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                                {block.image?.url && <img src={block.image.url} alt={block.title || ''} className="w-full h-full object-cover" />}
+                              </div>
+                              <div>
+                                {block.title && <h4 className="font-semibold text-gray-900 mb-1">{block.title}</h4>}
+                                {block.content && <p className="text-sm text-gray-600">{block.content}</p>}
+                              </div>
+                            </div>
+                          );
+                        }
+                        if (block.blockType === 'specTable') {
+                          return (
+                            <div key={i}>
+                              {block.title && <h4 className="font-semibold text-gray-900 mb-2">{block.title}</h4>}
+                              {block.rows && block.rows.length > 0 && (
+                                <table className="w-full text-sm">
+                                  <tbody>
+                                    {block.rows.map((row: any, ri: number) => (
+                                      <tr key={ri} className={ri % 2 === 0 ? 'bg-gray-50' : ''}>
+                                        <td className="px-3 py-2 font-medium text-gray-700">{row.label}</td>
+                                        <td className="px-3 py-2 text-gray-600">{row.value}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              )}
+                            </div>
+                          );
+                        }
+                        if (block.blockType === 'richText') {
+                          return (
+                            <div key={i} className="prose prose-sm max-w-none text-gray-600">
+                              {block.content?.root?.children?.map((node: any, ni: number) => {
+                                if (node.type === 'paragraph') {
+                                  return <p key={ni} className="mb-2">{node.children?.map((c: any) => c.text).join('')}</p>;
+                                }
+                                return null;
+                              })}
+                            </div>
+                          );
+                        }
+                        if (block.blockType === 'gallery') {
+                          return (
+                            <div key={i} className="grid grid-cols-3 gap-2">
+                              {block.images?.map((img: any, gi: number) => (
+                                <div key={gi} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                                  {img.image?.url && <img src={img.image.url} alt={img.caption || ''} className="w-full h-full object-cover" />}
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+                        if (block.blockType === 'video') {
+                          return (
+                            <div key={i}>
+                              {block.title && <h4 className="font-semibold text-gray-900 mb-2">{block.title}</h4>}
+                              {block.videoUrl && (
+                                <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden">
+                                  <iframe src={block.videoUrl} className="w-full h-full" allowFullScreen title={block.title || 'Video'} />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+                  )}
+
                   {/* Action Buttons */}
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 pt-2">
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.02, boxShadow: '0 8px 25px -5px rgba(37, 99, 235, 0.4)' }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                      onClick={() => {
+                        closeModal();
+                        navigate('/inquiry');
+                      }}
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3.5 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
                     >
+                      <Send className="w-4 h-4" />
                       {t('products.inquiryNow')}
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="px-6 border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-                    >
-                      {t('products.download')}
                     </motion.button>
                   </div>
                 </div>

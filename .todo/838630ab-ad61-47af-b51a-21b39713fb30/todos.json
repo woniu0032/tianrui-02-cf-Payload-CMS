@@ -1,20 +1,20 @@
 [
   {
+    "content": "排查 API 返回的 images 数据结构，确认 depth 参数是否生效",
     "id": "1",
-    "status": "completed",
-    "content": "给每个 FabricMaterial 添加 dbCategory 字段，移除硬编码 products 数组",
-    "priority": "high"
+    "priority": "high",
+    "status": "completed"
   },
   {
+    "content": "修复前端图片取值逻辑，确保使用正确的 URL 路径",
     "id": "2",
-    "status": "completed",
-    "content": "修改 useEffect 一次性拉取所有产品并按 category 分组映射",
-    "priority": "high"
+    "priority": "high",
+    "status": "completed"
   },
   {
+    "content": "构建验证 pnpm run build + pnpm run dev",
     "id": "3",
-    "status": "completed",
-    "content": "更新产品网格渲染逻辑，使用动态数据替代静态假数据",
-    "priority": "high"
+    "priority": "high",
+    "status": "completed"
   }
 ]

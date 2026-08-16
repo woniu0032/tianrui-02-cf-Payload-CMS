@@ -16,7 +16,6 @@ export default function Header() {
     { path: '/products', label: 'nav.products' },
     { path: '/honors', label: 'nav.honors' },
     { path: '/factory', label: 'nav.factory' },
-    { path: '/message', label: 'nav.message' },
     { path: '/contact', label: 'nav.contact' },
   ];
 

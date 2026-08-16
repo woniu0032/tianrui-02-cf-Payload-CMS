@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "status": "completed",
+    "content": "修改 Products.ts：content 改为 richText，layout 改为 blocks",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "status": "completed",
+    "content": "创建数据迁移脚本（保留现有 json 数据）",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "status": "completed",
+    "content": "提供 git 命令和服务器部署命令",
+    "priority": "high"
+  }
+]
