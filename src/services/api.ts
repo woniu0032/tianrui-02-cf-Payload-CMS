@@ -155,7 +155,9 @@ export const fetchProductById = async (id: string) => {
   });
   if (!response.ok) throw new Error('Failed to fetch product');
   const data = await response.json();
-  return transformPayloadResponse(data);
+  // Payload v3 REST API 单文档 GET 可能返回 { doc: {...} } 或直接返回文档
+  // 与 createProduct/updateProduct 保持一致，优先解包 data.doc
+  return transformPayloadResponse(data.doc || data);
 };
 
 // 创建产品

@@ -333,6 +333,16 @@ export default function ProductDetail() {
         if (productData) {
           // 解析 Payload CMS 产品数据
           const attributes = productData.attributes || {};
+
+          // 诊断日志：检查 API 返回的 attributes 是否包含英文字段
+          console.log('[ProductDetail] attributes keys:', Object.keys(attributes));
+          if (attributes.materials?.length) {
+            console.log('[ProductDetail] materials[0] sample:', JSON.stringify(attributes.materials[0]));
+          }
+          if (attributes.techParams?.length) {
+            console.log('[ProductDetail] techParams[0] sample:', JSON.stringify(attributes.techParams[0]));
+          }
+
           const images: ProductImage[] = [];
 
           // 处理图片数组

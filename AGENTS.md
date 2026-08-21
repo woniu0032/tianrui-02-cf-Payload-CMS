@@ -69,3 +69,4 @@
 - 首页二级菜单跳转需通过 URL query 参数传递分类（如 `/products?category=芳纶`），产品页面使用 `useSearchParams` 读取并自动触发分类选中
 - 双语数据映射禁止在 mapping 阶段做 fallback（如 `itemEn: c.itemEn || c.item`），否则英文字段被中文预填充，渲染时 `isZh ? zh : (en || zh)` 的 fallback 永远取到中文值
 - LanguageContext 必须用 localStorage 持久化语言状态，否则页面刷新后语言重置为中文，双语切换失效
+- `fetchProductById` 必须用 `data.doc || data` 解包（与 `createProduct`/`updateProduct` 一致），否则当 Payload v3 REST API 返回 `{ doc: {...} }` 格式时，`productData.attributes` 为 undefined，属性数组全部为空；News 的 `fetchNewsById` 同理需检查
