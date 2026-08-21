@@ -484,7 +484,18 @@ const translations = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('zh');
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('language') as Language;
+      if (saved === 'zh' || saved === 'en') return saved;
+    }
+    return 'zh';
+  });
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem('language', lang);
+  };
 
   const t = (key: string): string => {
     return (translations[language] as Record<string, string>)[key] || key;

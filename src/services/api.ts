@@ -4,6 +4,9 @@ export const API_BASE_URL = (typeof process !== 'undefined' && process.env?.VITE
   || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
   || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://api.hyfsad.com');
 
+// WebSocket URL - 由 HTTP(S) URL 转换而来
+export const WS_BASE_URL = API_BASE_URL.replace(/^http/, 'ws');
+
 // 获取存储的 token
 const getToken = () => localStorage.getItem('admin_token');
 
@@ -24,11 +27,14 @@ export const getHeaders = (includeAuth = true) => {
 export interface Product {
   id: string;
   name: string;
+  nameEn?: string;
   description: string;
+  descriptionEn?: string;
   price: number;
   category: string;
   images: { image: { url: string; id: string }; sortOrder: number }[] | null;
   content?: any;
+  contentEn?: any;
   layout?: any;
   attributes?: {
     specifications?: { label: string; value: string }[];
@@ -47,8 +53,11 @@ export interface Product {
 export interface News {
   id: string;
   title: string;
+  titleEn?: string;
   summary: string;
+  summaryEn?: string;
   content?: any;
+  contentEn?: any;
   layout?: any;
   coverImage: { url: string; id: string } | null;
   author: string;
@@ -384,11 +393,11 @@ export const fetchChatSession = async (sessionId: string) => {
   return data.docs.length > 0 ? transformPayloadResponse(data.docs[0]) : null;
 };
 
-// 更新聊天会话
+// 更新聊天会话（公开访问，不需要认证）
 export const updateChatSession = async (id: string, sessionData: Partial<ChatSession>) => {
   const response = await fetch(`${API_BASE_URL}/api/chat-sessions/${id}`, {
     method: 'PATCH',
-    headers: getHeaders(),
+    headers: getHeaders(false),
     body: JSON.stringify(sessionData),
   });
   if (!response.ok) {

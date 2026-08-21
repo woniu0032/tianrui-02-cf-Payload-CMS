@@ -18,7 +18,7 @@ const factoryScenes: FactoryScene[] = [
     id: 'panorama',
     titleKey: 'factoryShowcase.scene.panorama.title',
     titleEnKey: 'factoryShowcase.scene.panorama.titleEn',
-    image: 'https://conversation.cdn.meoo.host/conversations/314004577148157952/image/2026-05-16/1778932485576-工厂全景科技图.png?auth_key=5b94368a50e028098e0ace7fd955f2b99ec3b35437e90d9611ce40ab5cb8bb98',
+    image: 'https://conversation.cdn.meoo.host/conversations/314004577148157952/image/2026-08-20/1787191557711-工厂全景科技图_拷贝2.webp?auth_key=d2052e9342418e889bf5cb4e7d4c76392faf48deb5a31167e6c66d9e71d35be6',
     icon: MapPin,
     stats: [
       { labelKey: 'factoryShowcase.stat.area', value: '120', unit: '亩' },

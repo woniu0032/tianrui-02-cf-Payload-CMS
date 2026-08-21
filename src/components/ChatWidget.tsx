@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { createChatSession, fetchChatSession, updateChatSession } from '../services/api';
+import { createChatSession, fetchChatSession, updateChatSession, API_BASE_URL, WS_BASE_URL } from '../services/api';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -17,7 +17,7 @@ export default function ChatWidget() {
   const [docId, setDocId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   // 生成或恢复 sessionId
   const getOrCreateSessionId = () => {
@@ -109,25 +109,82 @@ export default function ChatWidget() {
     }
   };
 
-  // 轮询获取新消息（客服回复）
-  const pollMessages = useCallback(async () => {
-    if (!sessionId || !docId) return;
+  // WebSocket 实时订阅客服回复（带轮询降级）
+  useEffect(() => {
+    if (!isOpen || !sessionId || !docId) return;
+
+    let pollingInterval: NodeJS.Timeout | null = null;
+    let wsConnected = false;
+
+    const startPolling = () => {
+      console.log('[Chat] WebSocket unavailable, falling back to polling');
+      pollingInterval = setInterval(async () => {
+        try {
+          const session = await fetchChatSession(sessionId);
+          if (session && session.messages) {
+            setMessages(session.messages);
+          }
+        } catch (err) {
+          console.error('[Chat] Polling failed:', err);
+        }
+      }, 3000); // 每 3 秒轮询一次
+    };
+
+    const wsUrl = `${WS_BASE_URL}/api/chat-sessions/${docId}`;
 
     try {
-      const session = await fetchChatSession(sessionId);
-      if (session && session.messages) {
-        setMessages(prev => {
-          // 只有消息数量变化时才更新
-          if (session.messages.length !== prev.length) {
-            return session.messages;
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        console.log('[Chat] WebSocket connected');
+        wsConnected = true;
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          // Payload CMS realtime 推送格式: { type: 'update', doc: {...} }
+          if (data.doc?.messages) {
+            setMessages(data.doc.messages);
           }
-          return prev;
-        });
-      }
+        } catch (err) {
+          console.error('[Chat] Failed to parse WebSocket message:', err);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.error('[Chat] WebSocket error:', err);
+        if (!wsConnected) {
+          // WebSocket 从未成功连接，启动轮询降级
+          startPolling();
+        }
+      };
+
+      ws.onclose = () => {
+        console.log('[Chat] WebSocket disconnected');
+        if (!wsConnected) {
+          // WebSocket 从未成功连接，启动轮询降级
+          startPolling();
+        }
+      };
     } catch (err) {
-      // 静默处理轮询错误
+      console.error('[Chat] WebSocket creation failed:', err);
+      startPolling();
     }
-  }, [sessionId, docId]);
+
+    return () => {
+      if (wsRef.current) {
+        if (wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.close();
+        }
+        wsRef.current = null;
+      }
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [isOpen, sessionId, docId]);
 
   // 打开聊天窗口时初始化
   useEffect(() => {
@@ -135,23 +192,6 @@ export default function ChatWidget() {
       initSession();
     }
   }, [isOpen]);
-
-  // 打开后开始轮询，关闭后停止
-  useEffect(() => {
-    if (isOpen && sessionId && docId) {
-      pollTimerRef.current = setInterval(pollMessages, 5000); // 每5秒轮询
-    } else {
-      if (pollTimerRef.current) {
-        clearInterval(pollTimerRef.current);
-        pollTimerRef.current = null;
-      }
-    }
-    return () => {
-      if (pollTimerRef.current) {
-        clearInterval(pollTimerRef.current);
-      }
-    };
-  }, [isOpen, sessionId, docId, pollMessages]);
 
   // 自动滚动到底部
   useEffect(() => {

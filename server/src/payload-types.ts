@@ -73,6 +73,8 @@ export interface Config {
     news: News;
     'form-submissions': FormSubmission;
     'chat-sessions': ChatSession;
+    'email-notifications': EmailNotification;
+    'email-dedup-records': EmailDedupRecord;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -86,6 +88,8 @@ export interface Config {
     news: NewsSelect<false> | NewsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     'chat-sessions': ChatSessionsSelect<false> | ChatSessionsSelect<true>;
+    'email-notifications': EmailNotificationsSelect<false> | EmailNotificationsSelect<true>;
+    'email-dedup-records': EmailDedupRecordsSelect<false> | EmailDedupRecordsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -218,23 +222,85 @@ export interface Product {
         id?: string | null;
       }[]
     | null;
-  content?:
-    | {
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
         [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   layout?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
+    | (
+        | {
+            image: number | Media;
+            title?: string | null;
+            content?: string | null;
+            imagePosition?: ('left' | 'right') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'imageText';
+          }
+        | {
+            videoUrl: string;
+            title?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'video';
+          }
+        | {
+            title?: string | null;
+            rows?:
+              | {
+                  label: string;
+                  value: string;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'specTable';
+          }
+        | {
+            content?: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            } | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'richText';
+          }
+        | {
+            images?:
+              | {
+                  image: number | Media;
+                  caption?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'gallery';
+          }
+      )[]
     | null;
   attributes?: {
     specifications?:
@@ -294,23 +360,85 @@ export interface News {
   id: number;
   title: string;
   summary?: string | null;
-  content?:
-    | {
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
         [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   layout?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
+    | (
+        | {
+            image: number | Media;
+            title?: string | null;
+            content?: string | null;
+            imagePosition?: ('left' | 'right') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'imageText';
+          }
+        | {
+            videoUrl: string;
+            title?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'video';
+          }
+        | {
+            title?: string | null;
+            rows?:
+              | {
+                  label: string;
+                  value: string;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'specTable';
+          }
+        | {
+            content?: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            } | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'richText';
+          }
+        | {
+            images?:
+              | {
+                  image: number | Media;
+                  caption?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'gallery';
+          }
+      )[]
     | null;
   coverImage?: (number | null) | Media;
   author?: string | null;
@@ -339,6 +467,19 @@ export interface News {
 export interface FormSubmission {
   id: number;
   formType: string;
+  customerName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  companyName?: string | null;
+  productName?: string | null;
+  quantity?: string | null;
+  /**
+   * 客户的详细咨询内容
+   */
+  message?: string | null;
+  /**
+   * 系统自动保存的完整表单数据(JSON格式)
+   */
   data?:
     | {
         [k: string]: unknown;
@@ -348,9 +489,12 @@ export interface FormSubmission {
     | number
     | boolean
     | null;
-  status?: string | null;
+  status?: ('pending' | 'processed' | 'replied' | 'closed') | null;
   ipAddress?: string | null;
   userAgent?: string | null;
+  /**
+   * 内部处理记录,客户不可见
+   */
   notes?: string | null;
   processedBy?: (number | null) | User;
   processedAt?: string | null;
@@ -358,6 +502,8 @@ export interface FormSubmission {
   createdAt: string;
 }
 /**
+ * 💬 客服工作台入口：https://api.hyfsad.com/chat-dashboard
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "chat-sessions".
  */
@@ -386,6 +532,98 @@ export interface ChatSession {
   lastMessageAt?: string | null;
   transferredTo?: (number | null) | User;
   transferredAt?: string | null;
+  /**
+   * 非空表示已置顶，按此字段降序排列
+   */
+  pinnedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * 邮件通知配置，支持多收件人管理。数据库配置优先于环境变量。
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-notifications".
+ */
+export interface EmailNotification {
+  id: number;
+  /**
+   * 例如：询盘通知、留言通知
+   */
+  name: string;
+  /**
+   * 关闭后此配置不会触发邮件发送
+   */
+  enabled?: boolean | null;
+  /**
+   * 选择哪些表单类型使用此配置发送邮件
+   */
+  formTypes: ('inquiry' | 'message' | 'chat')[];
+  smtpHost: string;
+  /**
+   * SSL 通常用 465，TLS 通常用 587
+   */
+  smtpPort?: number | null;
+  /**
+   * 端口 465 勾选此项，端口 587 取消勾选
+   */
+  smtpSecure?: boolean | null;
+  smtpUser: string;
+  /**
+   * 163/QQ 邮箱请使用授权码而非登录密码
+   */
+  smtpPass: string;
+  /**
+   * 留空则使用 SMTP 账号作为发件人
+   */
+  smtpFrom?: string | null;
+  recipients: {
+    email: string;
+    /**
+     * 可选，用于标识收件人身份
+     */
+    name?: string | null;
+    id?: string | null;
+  }[];
+  /**
+   * 可在此处快速添加多个邮箱，每行一个或用逗号分隔
+   */
+  extraRecipients?: string | null;
+  /**
+   * 可用变量：{{typeLabel}} {{customerName}} {{productOrCompany}}
+   */
+  subjectTemplate?: string | null;
+  /**
+   * 控制邮件通知的发送频率，避免重复打扰
+   */
+  dedupMode?: ('ip_per_day' | 'session_once' | 'none') | null;
+  /**
+   * 内部备注，不影响邮件发送
+   */
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * 📧 邮件去重记录，用于防止重复发送通知
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-dedup-records".
+ */
+export interface EmailDedupRecord {
+  id: number;
+  /**
+   * 格式: ip_{ip}_{date} 或 session_{sessionId}
+   */
+  dedupKey: string;
+  dedupMode: string;
+  clientIp?: string | null;
+  sessionId?: string | null;
+  sentAt: string;
+  /**
+   * 超过此时间的记录会被自动清理
+   */
+  expiresAt: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -436,6 +674,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'chat-sessions';
         value: number | ChatSession;
+      } | null)
+    | ({
+        relationTo: 'email-notifications';
+        value: number | EmailNotification;
+      } | null)
+    | ({
+        relationTo: 'email-dedup-records';
+        value: number | EmailDedupRecord;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -576,7 +822,62 @@ export interface ProductsSelect<T extends boolean = true> {
         id?: T;
       };
   content?: T;
-  layout?: T;
+  layout?:
+    | T
+    | {
+        imageText?:
+          | T
+          | {
+              image?: T;
+              title?: T;
+              content?: T;
+              imagePosition?: T;
+              id?: T;
+              blockName?: T;
+            };
+        video?:
+          | T
+          | {
+              videoUrl?: T;
+              title?: T;
+              id?: T;
+              blockName?: T;
+            };
+        specTable?:
+          | T
+          | {
+              title?: T;
+              rows?:
+                | T
+                | {
+                    label?: T;
+                    value?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        richText?:
+          | T
+          | {
+              content?: T;
+              id?: T;
+              blockName?: T;
+            };
+        gallery?:
+          | T
+          | {
+              images?:
+                | T
+                | {
+                    image?: T;
+                    caption?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+      };
   attributes?:
     | T
     | {
@@ -639,7 +940,62 @@ export interface NewsSelect<T extends boolean = true> {
   title?: T;
   summary?: T;
   content?: T;
-  layout?: T;
+  layout?:
+    | T
+    | {
+        imageText?:
+          | T
+          | {
+              image?: T;
+              title?: T;
+              content?: T;
+              imagePosition?: T;
+              id?: T;
+              blockName?: T;
+            };
+        video?:
+          | T
+          | {
+              videoUrl?: T;
+              title?: T;
+              id?: T;
+              blockName?: T;
+            };
+        specTable?:
+          | T
+          | {
+              title?: T;
+              rows?:
+                | T
+                | {
+                    label?: T;
+                    value?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        richText?:
+          | T
+          | {
+              content?: T;
+              id?: T;
+              blockName?: T;
+            };
+        gallery?:
+          | T
+          | {
+              images?:
+                | T
+                | {
+                    image?: T;
+                    caption?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+      };
   coverImage?: T;
   author?: T;
   category?: T;
@@ -668,6 +1024,13 @@ export interface NewsSelect<T extends boolean = true> {
  */
 export interface FormSubmissionsSelect<T extends boolean = true> {
   formType?: T;
+  customerName?: T;
+  email?: T;
+  phone?: T;
+  companyName?: T;
+  productName?: T;
+  quantity?: T;
+  message?: T;
   data?: T;
   status?: T;
   ipAddress?: T;
@@ -698,6 +1061,49 @@ export interface ChatSessionsSelect<T extends boolean = true> {
   lastMessageAt?: T;
   transferredTo?: T;
   transferredAt?: T;
+  pinnedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-notifications_select".
+ */
+export interface EmailNotificationsSelect<T extends boolean = true> {
+  name?: T;
+  enabled?: T;
+  formTypes?: T;
+  smtpHost?: T;
+  smtpPort?: T;
+  smtpSecure?: T;
+  smtpUser?: T;
+  smtpPass?: T;
+  smtpFrom?: T;
+  recipients?:
+    | T
+    | {
+        email?: T;
+        name?: T;
+        id?: T;
+      };
+  extraRecipients?: T;
+  subjectTemplate?: T;
+  dedupMode?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-dedup-records_select".
+ */
+export interface EmailDedupRecordsSelect<T extends boolean = true> {
+  dedupKey?: T;
+  dedupMode?: T;
+  clientIp?: T;
+  sessionId?: T;
+  sentAt?: T;
+  expiresAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

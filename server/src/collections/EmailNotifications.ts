@@ -149,6 +149,20 @@ export const EmailNotifications: CollectionConfig = {
       },
     },
     {
+      name: 'dedupMode',
+      type: 'select',
+      label: '去重模式',
+      defaultValue: 'ip_per_day',
+      options: [
+        { label: '同一 IP 同一天只发一次', value: 'ip_per_day' },
+        { label: '同一会话只发一次', value: 'session_once' },
+        { label: '每次新消息都发送', value: 'none' },
+      ],
+      admin: {
+        description: '控制邮件通知的发送频率，避免重复打扰',
+      },
+    },
+    {
       name: 'notes',
       type: 'textarea',
       label: '备注',

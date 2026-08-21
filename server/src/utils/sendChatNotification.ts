@@ -3,6 +3,94 @@ import { getPayload } from 'payload'
 import config from '../payload.config'
 
 /**
+ * 检查是否应该发送邮件通知（根据去重模式，使用数据库持久化）
+ */
+async function shouldSendNotification(dedupMode: string, clientIp: string, sessionId: string): Promise<boolean> {
+  console.log(`[Email Dedup] Checking: dedupMode=${dedupMode}, clientIp=${clientIp}, sessionId=${sessionId}`)
+
+  if (dedupMode === 'none') {
+    console.log(`[Email Dedup] Mode is 'none', allowing notification`)
+    return true
+  }
+
+  const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+  const key = dedupMode === 'ip_per_day'
+    ? `ip_${clientIp}_${today}`
+    : `session_${sessionId}`
+
+  console.log(`[Email Dedup] Generated key: ${key}`)
+
+  try {
+    const payload = await getPayload({ config })
+
+    // 查询数据库中是否已有该 key 的记录
+    const existingRecords = await payload.find({
+      collection: 'email-dedup-records',
+      where: {
+        dedupKey: { equals: key },
+      },
+      limit: 1,
+    })
+
+    if (existingRecords.docs.length > 0) {
+      console.log(`[Email Dedup] Key already exists in database, blocking notification`)
+      return false
+    }
+
+    // 插入新记录
+    const expiresAt = dedupMode === 'ip_per_day'
+      ? new Date(Date.now() + 24 * 60 * 60 * 1000) // 24小时后过期
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30天后过期（会话级别）
+
+    await payload.create({
+      collection: 'email-dedup-records',
+      data: {
+        dedupKey: key,
+        dedupMode,
+        clientIp: clientIp || null,
+        sessionId: sessionId || null,
+        sentAt: new Date().toISOString(),
+        expiresAt: expiresAt.toISOString(),
+      },
+    })
+
+    console.log(`[Email Dedup] Added key to database with expiresAt=${expiresAt.toISOString()}`)
+
+    // 清理过期记录（使用 Payload 原生查询）
+    try {
+      const expiredRecords = await payload.find({
+        collection: 'email-dedup-records',
+        where: {
+          expiresAt: { less_than: new Date().toISOString() },
+        },
+        limit: 100,
+        depth: 0,
+      })
+
+      if (expiredRecords.docs.length > 0) {
+        for (const record of expiredRecords.docs) {
+          await payload.delete({
+            collection: 'email-dedup-records',
+            id: record.id,
+          })
+        }
+        console.log(`[Email Dedup] Cleaned ${expiredRecords.docs.length} expired records from database`)
+      }
+    } catch (cleanupError) {
+      console.warn(`[Email Dedup] Failed to cleanup expired records:`, cleanupError)
+    }
+
+    console.log(`[Email Dedup] Allowing notification`)
+    return true
+  } catch (error) {
+    console.error(`[Email Dedup] Failed to check/create dedup record:`, error)
+    // 出错时默认允许发送，避免阻塞正常通知
+    console.log(`[Email Dedup] Fallback: allowing notification due to error`)
+    return true
+  }
+}
+
+/**
  * 获取邮件通知配置（数据库优先，环境变量回退）
  */
 async function getEmailConfig(formType: string) {
@@ -41,6 +129,7 @@ async function getEmailConfig(formType: string) {
             : []),
         ],
         subjectTemplate: doc.subjectTemplate || '【{{typeLabel}}】新消息 - {{sessionId}}',
+        dedupMode: (doc as any).dedupMode || 'ip_per_day',
       }))
     }
   } catch (err) {
@@ -74,6 +163,7 @@ async function getEmailConfig(formType: string) {
       smtpFrom,
       recipients: extraEmails.length > 0 ? extraEmails : [smtpFrom],
       subjectTemplate: '【{{typeLabel}}】新消息 - {{sessionId}}',
+      dedupMode: 'ip_per_day',
     },
   ]
 }
@@ -94,12 +184,14 @@ function renderSubject(template: string, data: {
  * 客服消息邮件通知
  * 当客户发送新消息时，发送邮件到指定收件人
  * 优先使用数据库 email-notifications 集合的配置，未配置时回退到环境变量
+ * 同一 IP 同一天只发送一次邮件提醒，避免重复打扰
  */
 export async function sendChatNotification(data: {
   sessionId: string
   customerMessage: string
   timestamp: string
   messageCount?: number
+  clientIp?: string  // 客户端 IP，用于去重
 }): Promise<void> {
   const configs = await getEmailConfig('chat')
 
@@ -113,6 +205,15 @@ export async function sendChatNotification(data: {
   for (const cfg of configs) {
     if (cfg.recipients.length === 0) {
       console.warn(`[Email] Config "${cfg.name}" has no recipients, skipping`)
+      continue
+    }
+
+    // 根据数据库配置的去重模式检查是否应该发送
+    const dedupMode = cfg.dedupMode || 'ip_per_day'
+    const ip = data.clientIp || 'unknown'
+    const shouldSend = await shouldSendNotification(dedupMode, ip, data.sessionId)
+    if (!shouldSend) {
+      console.log(`[Email] Chat notification skipped for session ${data.sessionId} (dedupMode=${dedupMode})`)
       continue
     }
 

@@ -24,8 +24,10 @@ const imageTextBlock: Block = {
   labels: { singular: '图文混排', plural: '图文混排' },
   fields: [
     { name: 'image', type: 'upload', relationTo: 'media', label: '图片', required: true },
-    { name: 'title', type: 'text', label: '标题' },
-    { name: 'content', type: 'textarea', label: '文字内容' },
+    { name: 'title', type: 'text', label: '标题（中文）' },
+    { name: 'titleEn', type: 'text', label: 'Title (English)' },
+    { name: 'content', type: 'textarea', label: '文字内容（中文）' },
+    { name: 'contentEn', type: 'textarea', label: 'Content (English)' },
     {
       name: 'imagePosition',
       type: 'select',
@@ -58,14 +60,17 @@ const specTableBlock: Block = {
   slug: 'specTable',
   labels: { singular: '参数表格', plural: '参数表格' },
   fields: [
-    { name: 'title', type: 'text', label: '表格标题' },
+    { name: 'title', type: 'text', label: '表格标题（中文）' },
+    { name: 'titleEn', type: 'text', label: 'Title (English)' },
     {
       name: 'rows',
       type: 'array',
       label: '表格行',
       fields: [
-        { name: 'label', type: 'text', label: '参数名', required: true },
-        { name: 'value', type: 'text', label: '参数值', required: true },
+        { name: 'label', type: 'text', label: '参数名（中文）', required: true },
+        { name: 'labelEn', type: 'text', label: 'Label (English)' },
+        { name: 'value', type: 'text', label: '参数值（中文）', required: true },
+        { name: 'valueEn', type: 'text', label: 'Value (English)' },
       ],
     },
   ],
@@ -78,7 +83,8 @@ const richTextBlock: Block = {
   slug: 'richText',
   labels: { singular: '富文本', plural: '富文本' },
   fields: [
-    { name: 'content', type: 'richText', label: '内容' },
+    { name: 'content', type: 'richText', label: '内容（中文）' },
+    { name: 'contentEn', type: 'richText', label: 'Content (English)' },
   ],
 }
 
@@ -95,7 +101,8 @@ const galleryBlock: Block = {
       label: '图片列表',
       fields: [
         { name: 'image', type: 'upload', relationTo: 'media', label: '图片', required: true },
-        { name: 'caption', type: 'text', label: '说明文字' },
+        { name: 'caption', type: 'text', label: '说明文字（中文）' },
+        { name: 'captionEn', type: 'text', label: 'Caption (English)' },
       ],
     },
   ],
@@ -115,19 +122,50 @@ export const News: CollectionConfig = {
     {
       name: 'title',
       type: 'text',
-      label: '标题',
+      label: '标题（中文）',
       required: true,
       index: true,
     },
     {
+      name: 'titleEn',
+      type: 'text',
+      label: 'Title (English)',
+    },
+    {
       name: 'summary',
       type: 'textarea',
-      label: '摘要',
+      label: '摘要（中文）',
+    },
+    {
+      name: 'summaryEn',
+      type: 'textarea',
+      label: 'Summary (English)',
     },
     {
       name: 'content',
       type: 'richText',
-      label: '富文本内容',
+      label: '富文本内容（中文）',
+      editor: lexicalEditor({
+        features: () => [
+          FixedToolbarFeature(),
+          InlineToolbarFeature(),
+          ParagraphFeature(),
+          HeadingFeature({ enabledHeadingSizes: ['h2', 'h3', 'h4'] }),
+          BoldFeature(),
+          ItalicFeature(),
+          UnderlineFeature(),
+          StrikethroughFeature(),
+          UnorderedListFeature(),
+          OrderedListFeature(),
+          LinkFeature(),
+          UploadFeature(),
+        ],
+      }),
+    },
+    {
+      name: 'contentEn',
+      type: 'richText',
+      label: 'Rich Text Content (English)',
       editor: lexicalEditor({
         features: () => [
           FixedToolbarFeature(),

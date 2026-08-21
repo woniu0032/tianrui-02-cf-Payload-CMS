@@ -95,10 +95,10 @@ export default function News() {
                       : new Date(news.createdAt).toLocaleDateString(isZh ? 'zh-CN' : 'en-US')}
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                    {news.title}
+                    {isZh ? news.title : (news.titleEn || news.title)}
                   </h3>
                   <p className="text-gray-600 mb-4 line-clamp-3">
-                    {news.summary || ''}
+                    {isZh ? (news.summary || '') : (news.summaryEn || news.summary || '')}
                   </p>
                   <div className="flex items-center text-blue-600 font-medium group-hover:text-blue-700">
                     {t('news.readMore')}

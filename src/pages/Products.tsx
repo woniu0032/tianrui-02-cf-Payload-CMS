@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { X, ChevronRight, Flame, Droplets, Shield, Zap, HeartPulse, Layers, Move, Sun, Palette, Leaf, CircleDot, Send } from 'lucide-react';
 import { fetchProducts, API_BASE_URL, getHeaders } from '../services/api';
@@ -269,6 +269,7 @@ export default function Products() {
   const isZh = language === 'zh';
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [selectedMaterial, setSelectedMaterial] = useState<FabricMaterial | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -276,13 +277,43 @@ export default function Products() {
   const [productsByCategory, setProductsByCategory] = useState<Record<string, Product[]>>({});
   const [loading, setLoading] = useState(true);
 
-  // 路由切换时重置所有状态
+  const handleMaterialClick = (material: FabricMaterial, subCategory?: string) => {
+    setSelectedMaterial(material);
+    setActiveCategory(material.id);
+    setActiveSubCategory(subCategory || null);
+  };
+
+  // 从 URL 参数读取分类并自动选中
   useEffect(() => {
-    setSelectedMaterial(null);
-    setSelectedProduct(null);
-    setActiveCategory(null);
-    setActiveSubCategory(null);
-  }, [location.pathname]);
+    const categoryParam = searchParams.get('category');
+    if (categoryParam) {
+      // 查找对应的 material
+      const matchedMaterial = fabricMaterials.find(m =>
+        m.subMenu?.some(sub => sub.dbCategory === categoryParam) || m.dbCategory === categoryParam
+      );
+
+      if (matchedMaterial) {
+        // 检查是否是子分类
+        const isSubCategory = matchedMaterial.subMenu?.some(sub => sub.dbCategory === categoryParam);
+        if (isSubCategory) {
+          handleMaterialClick(matchedMaterial, categoryParam);
+        } else {
+          handleMaterialClick(matchedMaterial);
+        }
+      }
+    }
+  }, [searchParams]);
+
+  // 路由切换时重置所有状态(但保留URL参数触发的选择)
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (!categoryParam) {
+      setSelectedMaterial(null);
+      setSelectedProduct(null);
+      setActiveCategory(null);
+      setActiveSubCategory(null);
+    }
+  }, [location.pathname, searchParams]);
 
   // 一次性拉取所有产品并按 category 分组
   useEffect(() => {
@@ -352,12 +383,6 @@ export default function Products() {
     fetchAllProducts();
   }, []);
 
-  const handleMaterialClick = (material: FabricMaterial, subCategory?: string) => {
-    setSelectedMaterial(material);
-    setActiveCategory(material.id);
-    setActiveSubCategory(subCategory || null);
-  };
-
   const handleProductClick = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedProduct(product);
@@ -414,8 +439,8 @@ export default function Products() {
       </div>
 
       {/* Material Categories Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
           {fabricMaterials.map((material, index) => {
             const hasSubMenu = material.subMenu && material.subMenu.length > 0;
             const productCount = hasSubMenu
@@ -426,24 +451,28 @@ export default function Products() {
                 key={material.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`relative group cursor-pointer bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border-2 ${
-                  activeCategory === material.id ? 'border-blue-500 ring-2 ring-blue-200' : 'border-transparent'
+                transition={{ delay: index * 0.04 }}
+                className={`relative group cursor-pointer bg-white rounded-2xl transition-all duration-300 border-2 card-hover-lift ${
+                  activeCategory === material.id
+                    ? 'border-blue-500 shadow-lg shadow-blue-100 ring-2 ring-blue-100'
+                    : 'border-gray-100 shadow-sm hover:border-blue-200 hover:shadow-lg'
                 }`}
               >
                 {/* 主菜单内容 */}
-                <div onClick={() => handleMaterialClick(material)} className="p-6">
-                  <div className="flex items-center justify-center w-14 h-14 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white group-hover:scale-110 transition-transform duration-300">
+                <div onClick={() => handleMaterialClick(material)} className="p-6 pb-5">
+                  <div className={`flex items-center justify-center w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-md shadow-blue-200 transition-all duration-300 ${
+                    activeCategory === material.id ? 'scale-110' : 'group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-blue-200'
+                  }`}>
                     {material.icon}
                   </div>
-                  <h3 className="text-center font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-center font-bold text-gray-900 mb-1.5 text-[15px] group-hover:text-blue-600 transition-colors duration-200">
                     {isZh ? material.name : material.nameEn}
                   </h3>
-                  <p className="text-center text-xs text-gray-500">
+                  <p className="text-center text-xs text-gray-400 font-medium tracking-wide">
                     {loading ? '...' : `${productCount} ${t('products.productCount')}`}
                   </p>
                 </div>
-                <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+                <div className="h-1 rounded-b-2xl bg-gradient-to-r from-blue-500 to-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
 
                 {/* 子菜单 - 纯CSS hover控制，无需JS定时器 */}
                 {hasSubMenu && (
@@ -535,33 +564,34 @@ export default function Products() {
                 </div>
               ) : (
                 /* Dynamic Grid */
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
                   {getCurrentProducts().map((product, index) => (
                     <motion.div
                       key={product.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
+                      initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.05 }}
+                      transition={{ delay: index * 0.04 }}
                       onClick={(e) => handleProductClick(product, e)}
-                      className="group cursor-pointer bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
+                      className="group cursor-pointer bg-white rounded-2xl overflow-hidden border border-gray-100 card-hover-lift"
                     >
-                      <div className="aspect-square overflow-hidden bg-gray-200">
+                      <div className="aspect-square overflow-hidden bg-gray-100 relative">
                         <img
                           src={product.image}
                           alt={isZh ? product.name : product.nameEn}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                         />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </div>
-                      <div className="p-4">
-                        <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                      <div className="p-4 pb-5">
+                        <h4 className="font-semibold text-gray-900 mb-1.5 text-[15px] group-hover:text-blue-600 transition-colors duration-200 line-clamp-1">
                           {isZh ? product.name : product.nameEn}
                         </h4>
-                        <p className="text-sm text-gray-500 line-clamp-2">
+                        <p className="text-sm text-gray-400 line-clamp-2 leading-relaxed">
                           {isZh ? product.description : product.descriptionEn}
                         </p>
-                        <div className="mt-3 flex items-center text-blue-600 text-sm font-medium">
+                        <div className="mt-3 flex items-center text-blue-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
                           {t('products.viewDetails')}
-                          <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                          <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" />
                         </div>
                       </div>
                     </motion.div>

@@ -54,7 +54,9 @@ interface ImageTextBlock {
   blockType: 'imageText';
   image?: { url: string };
   title?: string;
+  titleEn?: string;
   content?: string;
+  contentEn?: string;
   imagePosition?: 'left' | 'right';
 }
 
@@ -66,23 +68,28 @@ interface VideoBlock {
 
 interface SpecTableRow {
   label: string;
+  labelEn?: string;
   value: string;
+  valueEn?: string;
 }
 
 interface SpecTableBlock {
   blockType: 'specTable';
   title?: string;
+  titleEn?: string;
   rows?: SpecTableRow[];
 }
 
 interface RichTextBlock {
   blockType: 'richText';
   content?: LexicalContent;
+  contentEn?: LexicalContent;
 }
 
 interface GalleryImage {
   image?: { url: string };
   caption?: string;
+  captionEn?: string;
 }
 
 interface GalleryBlock {
@@ -101,8 +108,12 @@ interface ProductData {
   image: string;
   images: ProductImage[];
   specs: ProductSpec[];
+  materials: { item: string; itemEn?: string }[];
+  colors: { item: string; itemEn?: string }[];
   features: string[];
   featuresEn: string[];
+  techParams: { label: string; labelEn?: string; value: string; valueEn?: string }[];
+  applications: { item: string; itemEn?: string }[];
   category: string;
   categoryEn: string;
   content?: LexicalContent;
@@ -169,14 +180,16 @@ function LexicalRichText({ content }: { content?: LexicalContent }) {
 }
 
 // Render individual layout blocks
-function ImageTextBlockComponent({ block }: { block: ImageTextBlock }) {
+function ImageTextBlockComponent({ block, isZh }: { block: ImageTextBlock; isZh: boolean }) {
   const isLeft = block.imagePosition !== 'right';
-  
+  const title = isZh ? block.title : (block.titleEn || block.title);
+  const content = isZh ? block.content : (block.contentEn || block.content);
+
   return (
     <div className={`grid md:grid-cols-2 gap-8 items-center ${isLeft ? '' : 'md:flex-row-reverse'}`}>
       <div className="aspect-video bg-slate-100 rounded-xl overflow-hidden">
         {block.image?.url ? (
-          <img src={block.image.url} alt={block.title || ''} className="w-full h-full object-cover" />
+          <img src={block.image.url} alt={title || ''} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-400">
             <ImageIcon className="w-12 h-12" />
@@ -184,8 +197,8 @@ function ImageTextBlockComponent({ block }: { block: ImageTextBlock }) {
         )}
       </div>
       <div>
-        {block.title && <h3 className="text-xl font-bold text-slate-900 mb-3">{block.title}</h3>}
-        {block.content && <p className="text-slate-600 leading-relaxed">{block.content}</p>}
+        {title && <h3 className="text-xl font-bold text-slate-900 mb-3">{title}</h3>}
+        {content && <p className="text-slate-600 leading-relaxed">{content}</p>}
       </div>
     </div>
   );
@@ -213,78 +226,82 @@ function VideoBlockComponent({ block }: { block: VideoBlock }) {
   );
 }
 
-function SpecTableBlockComponent({ block }: { block: SpecTableBlock }) {
+function SpecTableBlockComponent({ block, isZh }: { block: SpecTableBlock; isZh: boolean }) {
+  const title = isZh ? block.title : (block.titleEn || block.title);
   return (
     <div className="space-y-4">
-      {block.title && <h3 className="text-xl font-bold text-slate-900">{block.title}</h3>}
+      {title && <h3 className="text-xl font-bold text-slate-900">{title}</h3>}
       {block.rows && block.rows.length > 0 ? (
         <div className="border border-slate-200 rounded-xl overflow-hidden">
           <table className="w-full">
             <tbody>
               {block.rows.map((row, i) => (
                 <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                  <td className="px-6 py-3 font-medium text-slate-700 border-b border-slate-200 w-1/3">{row.label}</td>
-                  <td className="px-6 py-3 text-slate-600 border-b border-slate-200">{row.value}</td>
+                  <td className="px-6 py-3 font-medium text-slate-700 border-b border-slate-200 w-1/3">{isZh ? row.label : (row.labelEn || row.label)}</td>
+                  <td className="px-6 py-3 text-slate-600 border-b border-slate-200">{isZh ? row.value : (row.valueEn || row.value)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       ) : (
-        <p className="text-slate-400 italic">暂无参数数据</p>
+        <p className="text-slate-400 italic">{isZh ? '暂无参数数据' : 'No data available'}</p>
       )}
     </div>
   );
 }
 
-function RichTextBlockComponent({ block }: { block: RichTextBlock }) {
-  return <LexicalRichText content={block.content} />;
+function RichTextBlockComponent({ block, isZh }: { block: RichTextBlock; isZh: boolean }) {
+  return <LexicalRichText content={(isZh ? block.content : (block.contentEn || block.content))} />;
 }
 
-function GalleryBlockComponent({ block }: { block: GalleryBlock }) {
+function GalleryBlockComponent({ block, isZh }: { block: GalleryBlock; isZh: boolean }) {
   return (
     <div className="space-y-4">
       {block.images && block.images.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {block.images.map((img, i) => (
-            <div key={i} className="space-y-2">
-              <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden">
-                {img.image?.url ? (
-                  <img src={img.image.url} alt={img.caption || ''} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-400">
-                    <ImageIcon className="w-8 h-8" />
-                  </div>
-                )}
+          {block.images.map((img, i) => {
+            const caption = isZh ? img.caption : (img.captionEn || img.caption);
+            return (
+              <div key={i} className="space-y-2">
+                <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden">
+                  {img.image?.url ? (
+                    <img src={img.image.url} alt={caption || ''} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400">
+                      <ImageIcon className="w-8 h-8" />
+                    </div>
+                  )}
+                </div>
+                {caption && <p className="text-sm text-slate-500 text-center">{caption}</p>}
               </div>
-              {img.caption && <p className="text-sm text-slate-500 text-center">{img.caption}</p>}
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
-        <p className="text-slate-400 italic">暂无图片</p>
+        <p className="text-slate-400 italic">{isZh ? '暂无图片' : 'No images'}</p>
       )}
     </div>
   );
 }
 
-function LayoutBlocksRenderer({ blocks }: { blocks?: LayoutBlock[] }) {
+function LayoutBlocksRenderer({ blocks, isZh }: { blocks?: LayoutBlock[]; isZh: boolean }) {
   if (!blocks || blocks.length === 0) return null;
-  
+
   return (
     <div className="space-y-12">
       {blocks.map((block, i) => {
         switch (block.blockType) {
           case 'imageText':
-            return <ImageTextBlockComponent key={i} block={block as ImageTextBlock} />;
+            return <ImageTextBlockComponent key={i} block={block as ImageTextBlock} isZh={isZh} />;
           case 'video':
             return <VideoBlockComponent key={i} block={block as VideoBlock} />;
           case 'specTable':
-            return <SpecTableBlockComponent key={i} block={block as SpecTableBlock} />;
+            return <SpecTableBlockComponent key={i} block={block as SpecTableBlock} isZh={isZh} />;
           case 'richText':
-            return <RichTextBlockComponent key={i} block={block as RichTextBlock} />;
+            return <RichTextBlockComponent key={i} block={block as RichTextBlock} isZh={isZh} />;
           case 'gallery':
-            return <GalleryBlockComponent key={i} block={block as GalleryBlock} />;
+            return <GalleryBlockComponent key={i} block={block as GalleryBlock} isZh={isZh} />;
           default:
             return null;
         }
@@ -335,23 +352,41 @@ export default function ProductDetail() {
           setProduct({
             id: productData.id,
             name: productData.name,
-            nameEn: productData.nameEn || productData.name,
+            nameEn: productData.nameEn || '',
             description: productData.description || '',
-            descriptionEn: productData.descriptionEn || productData.description || '',
+            descriptionEn: productData.descriptionEn || '',
             image: images[0]?.url || '',
             images: images,
-            specs: [
-              { label: '成分', labelEn: 'Composition', value: attributes.specifications?.find((s: any) => s.label === '成分')?.value || '88%棉 + 12%锦纶', valueEn: attributes.specifications?.find((s: any) => s.labelEn === 'Composition')?.value },
-              { label: '克重', labelEn: 'Weight', value: attributes.specifications?.find((s: any) => s.label === '克重')?.value || '245 GSM', valueEn: attributes.specifications?.find((s: any) => s.labelEn === 'Weight')?.value },
-              { label: '颜色', labelEn: 'Color', value: attributes.specifications?.find((s: any) => s.label === '颜色')?.value || '深蓝色', valueEn: attributes.specifications?.find((s: any) => s.labelEn === 'Color')?.value },
-              { label: '型号', labelEn: 'Model', value: attributes.specifications?.find((s: any) => s.label === '型号')?.value || '-', valueEn: attributes.specifications?.find((s: any) => s.labelEn === 'Model')?.value },
-              { label: '应用', labelEn: 'Application', value: attributes.applications?.[0]?.item || '阻燃工作服', valueEn: attributes.applications?.[0]?.itemEn },
-            ],
-            features: attributes.features?.map((f: any) => f.item) || ['阻燃', '防油', '防水', '防静电'],
-            featuresEn: attributes.features?.map((f: any) => f.itemEn) || ['Flame Retardant', 'Oil Resistant', 'Waterproof', 'Anti-static'],
+            specs: (attributes.specifications || []).map((s: any) => ({
+              label: s.label || '',
+              labelEn: s.labelEn || '',
+              value: s.value || '',
+              valueEn: s.valueEn || '',
+            })),
+            materials: (attributes.materials || []).map((m: any) => ({
+              item: m.item || '',
+              itemEn: m.itemEn || '',
+            })),
+            colors: (attributes.colors || []).map((c: any) => ({
+              item: c.item || '',
+              itemEn: c.itemEn || '',
+            })),
+            features: attributes.features?.map((f: any) => f.item).filter(Boolean) || [],
+            featuresEn: attributes.features?.map((f: any) => f.itemEn || '').filter(Boolean) || [],
+            techParams: (attributes.techParams || []).map((t: any) => ({
+              label: t.label || '',
+              labelEn: t.labelEn || '',
+              value: t.value || '',
+              valueEn: t.valueEn || '',
+            })),
+            applications: (attributes.applications || []).map((a: any) => ({
+              item: a.item || '',
+              itemEn: a.itemEn || '',
+            })),
             category: productData.category,
-            categoryEn: productData.categoryEn || productData.category,
+            categoryEn: productData.categoryEn || '',
             content: productData.content,
+            contentEn: productData.contentEn,
             layout: productData.layout,
           });
 
@@ -395,8 +430,12 @@ export default function ProductDetail() {
               { label: '幅宽', labelEn: 'Width', value: '150cm' },
               { label: '认证', labelEn: 'Certification', value: 'ISO, OEKO-TEX' },
             ],
+            materials: [],
+            colors: [],
             features: ['阻燃', '耐高温', '环保'],
             featuresEn: ['Flame Retardant', 'High Temp', 'Eco-friendly'],
+            techParams: [],
+            applications: [],
             category: '阻燃面料',
             categoryEn: 'Flame Retardant',
           });
@@ -419,8 +458,12 @@ export default function ProductDetail() {
             { label: '幅宽', labelEn: 'Width', value: '150cm' },
             { label: '认证', labelEn: 'Certification', value: 'ISO, OEKO-TEX' },
           ],
+          materials: [],
+          colors: [],
           features: ['阻燃', '耐高温', '环保'],
           featuresEn: ['Flame Retardant', 'High Temp', 'Eco-friendly'],
+          techParams: [],
+          applications: [],
           category: '阻燃面料',
           categoryEn: 'Flame Retardant',
         });
@@ -490,30 +533,30 @@ export default function ProductDetail() {
             {/* 左侧：图片展示 */}
             <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-8 lg:p-12">
               {/* 主图 */}
-              <motion.div 
-                className="relative aspect-square mb-6 bg-white rounded-xl shadow-lg overflow-hidden"
+              <motion.div
+                className="relative aspect-square mb-6 bg-white rounded-2xl shadow-xl overflow-hidden group/img"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
               >
-                <img 
-                  src={allImages[currentImageIndex]?.url || product.image} 
-                  alt={isZh ? product.name : product.nameEn} 
-                  className="w-full h-full object-cover"
+                <img
+                  src={allImages[currentImageIndex]?.url || product.image}
+                  alt={isZh ? product.name : product.nameEn}
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/img:scale-105"
                 />
-                
+
                 {/* 图片切换按钮 */}
                 {allImages.length > 1 && (
                   <>
-                    <button 
+                    <button
                       onClick={prevImage}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-105 transition-all duration-200 opacity-0 group-hover/img:opacity-100"
                     >
                       <ChevronLeft className="w-5 h-5 text-gray-700" />
                     </button>
-                    <button 
+                    <button
                       onClick={nextImage}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-105 transition-all duration-200 opacity-0 group-hover/img:opacity-100"
                     >
                       <ChevronRight className="w-5 h-5 text-gray-700" />
                     </button>
@@ -522,13 +565,13 @@ export default function ProductDetail() {
 
                 {/* 图片指示器 */}
                 {allImages.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 bg-black/20 backdrop-blur-sm rounded-full px-3 py-2">
                     {allImages.map((_, idx) => (
                       <button
                         key={idx}
                         onClick={() => setCurrentImageIndex(idx)}
-                        className={`w-2 h-2 rounded-full transition-all ${
-                          idx === currentImageIndex ? 'bg-blue-600 w-6' : 'bg-gray-400'
+                        className={`rounded-full transition-all duration-300 ${
+                          idx === currentImageIndex ? 'bg-white w-6 h-2' : 'bg-white/50 w-2 h-2 hover:bg-white/80'
                         }`}
                       />
                     ))}
@@ -537,12 +580,8 @@ export default function ProductDetail() {
 
                 {/* 产品标签 */}
                 <div className="absolute top-4 left-4 flex gap-2">
-                  <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
+                  <span className="px-3 py-1.5 bg-blue-600/90 backdrop-blur-sm text-white text-xs font-semibold rounded-lg shadow-sm">
                     {isZh ? product.category : product.categoryEn}
-                  </span>
-                  <span className="px-3 py-1 bg-amber-500 text-white text-sm font-medium rounded-full flex items-center gap-1">
-                    <Flame className="w-3 h-3" />
-                    {t('productDetail.flameRetardant')}
                   </span>
                 </div>
               </motion.div>
@@ -556,12 +595,14 @@ export default function ProductDetail() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setCurrentImageIndex(idx)}
-                      className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                        idx === currentImageIndex ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200 hover:border-gray-300'
+                      className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
+                        idx === currentImageIndex
+                          ? 'border-blue-500 ring-2 ring-blue-200 shadow-md'
+                          : 'border-gray-200 hover:border-blue-300 opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <img 
-                        src={img.url} 
+                      <img
+                        src={img.url}
                         alt={`${isZh ? product.name : product.nameEn} ${idx + 1}`}
                         className="w-full h-full object-cover"
                       />
@@ -582,13 +623,13 @@ export default function ProductDetail() {
                 >
                   {isZh ? product.name : product.nameEn}
                 </motion.h1>
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                   className="text-slate-600 text-lg leading-relaxed"
                 >
-                  {isZh ? product.description : product.descriptionEn}
+                  {isZh ? product.description : (product.descriptionEn || product.description)}
                 </motion.p>
               </div>
 
@@ -599,8 +640,8 @@ export default function ProductDetail() {
                 transition={{ delay: 0.2 }}
                 className="flex flex-wrap gap-2"
               >
-                {(isZh ? product.features : product.featuresEn).map((feature, i) => (
-                  <span 
+                {(isZh ? product.features : product.featuresEn).filter(Boolean).map((feature, i) => (
+                  <span
                     key={i}
                     className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100 flex items-center gap-1"
                   >
@@ -614,49 +655,140 @@ export default function ProductDetail() {
               </motion.div>
 
               {/* 产品参数 */}
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-slate-50 rounded-xl p-6 border border-slate-100"
-              >
-                <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                  <span className="w-1 h-5 bg-blue-600 rounded-full"></span>
-                  {t('productDetail.specs')}
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {product.specs.map((spec, i) => (
-                    <div key={i} className="bg-white rounded-lg p-3 border border-slate-100">
-                      <span className="text-slate-500 text-sm">{isZh ? spec.label : spec.labelEn}</span>
-                      <p className="font-semibold text-slate-900 mt-1">{spec.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
+              {product.specs.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-slate-50 rounded-2xl p-6 border border-slate-100"
+                >
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2.5">
+                    <span className="w-1 h-5 bg-blue-600 rounded-full"></span>
+                    {t('productDetail.specs')}
+                  </h3>
+                  <div className="space-y-0 divide-y divide-slate-100">
+                    {product.specs.map((spec, i) => (
+                      <div key={i} className="flex items-center justify-between py-3 table-row-hover px-2 -mx-2 rounded-lg">
+                        <span className="text-slate-500 text-sm">{isZh ? spec.label : (spec.labelEn || spec.label)}</span>
+                        <span className="font-semibold text-slate-900 text-sm">{isZh ? spec.value : (spec.valueEn || spec.value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* 材质成分 */}
+              {product.materials.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35 }}
+                  className="bg-slate-50 rounded-2xl p-6 border border-slate-100"
+                >
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2.5">
+                    <span className="w-1 h-5 bg-green-600 rounded-full"></span>
+                    {isZh ? '材质成分' : 'Materials'}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {product.materials.map((material, i) => (
+                      <span key={i} className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm border border-green-200">
+                        {isZh ? material.item : (material.itemEn || material.item)}
+                      </span>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* 颜色选项 */}
+              {product.colors.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-slate-50 rounded-2xl p-6 border border-slate-100"
+                >
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2.5">
+                    <span className="w-1 h-5 bg-purple-600 rounded-full"></span>
+                    {isZh ? '颜色选项' : 'Colors'}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {product.colors.map((color, i) => (
+                      <span key={i} className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm border border-purple-200">
+                        {isZh ? color.item : (color.itemEn || color.item)}
+                      </span>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* 技术参数 */}
+              {product.techParams.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                  className="bg-slate-50 rounded-2xl p-6 border border-slate-100"
+                >
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2.5">
+                    <span className="w-1 h-5 bg-cyan-600 rounded-full"></span>
+                    {isZh ? '技术参数' : 'Technical Parameters'}
+                  </h3>
+                  <div className="space-y-0 divide-y divide-slate-100">
+                    {product.techParams.map((param, i) => (
+                      <div key={i} className="flex items-center justify-between py-3 table-row-hover px-2 -mx-2 rounded-lg">
+                        <span className="text-slate-500 text-sm">{isZh ? param.label : (param.labelEn || param.label)}</span>
+                        <span className="font-semibold text-slate-900 text-sm">{isZh ? param.value : (param.valueEn || param.value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* 应用领域 */}
+              {product.applications.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-slate-50 rounded-2xl p-6 border border-slate-100"
+                >
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2.5">
+                    <span className="w-1 h-5 bg-indigo-600 rounded-full"></span>
+                    {isZh ? '应用领域' : 'Applications'}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {product.applications.map((app, i) => (
+                      <span key={i} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm border border-indigo-200">
+                        {isZh ? app.item : (app.itemEn || app.item)}
+                      </span>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
 
               {/* 操作按钮 */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
                 className="flex gap-4 pt-4"
               >
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.02, boxShadow: '0 12px 28px -6px rgba(37, 99, 235, 0.35)' }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                     setTimeout(() => navigate('/inquiry'), 300);
                   }}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg shadow-blue-200/60 flex items-center justify-center gap-2.5"
                 >
                   <ShoppingCart className="w-5 h-5" />
                   {t('products.inquiryNow')}
                 </motion.button>
-                <motion.button 
+                <motion.button
                   whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="px-8 border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:border-blue-300 hover:bg-blue-50 transition-all flex items-center gap-2"
+                  whileTap={{ scale: 0.97 }}
+                  className="px-8 border-2 border-slate-200 text-slate-600 rounded-xl font-medium hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-300 flex items-center gap-2.5"
                 >
                   <FileText className="w-5 h-5" />
                   {t('products.download')}
@@ -667,8 +799,8 @@ export default function ProductDetail() {
         </motion.div>
 
         {/* 富文本内容区域 */}
-        {product.content && (
-          <motion.div 
+        {(isZh ? product.content : (product.contentEn || product.content)) && (
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
@@ -676,9 +808,9 @@ export default function ProductDetail() {
           >
             <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
               <span className="w-1 h-6 bg-blue-600 rounded-full"></span>
-              {t('productDetail.productDescription') || '产品介绍'}
+              {isZh ? (t('productDetail.productDescription') || '产品介绍') : 'Product Description'}
             </h2>
-            <LexicalRichText content={product.content} />
+            <LexicalRichText content={(isZh ? product.content : (product.contentEn || product.content)) as LexicalContent} />
           </motion.div>
         )}
 
@@ -690,7 +822,7 @@ export default function ProductDetail() {
             transition={{ delay: 0.6 }}
             className="mt-12 bg-white rounded-2xl shadow-lg p-8 lg:p-12"
           >
-            <LayoutBlocksRenderer blocks={product.layout} />
+            <LayoutBlocksRenderer blocks={product.layout} isZh={isZh} />
           </motion.div>
         )}
 

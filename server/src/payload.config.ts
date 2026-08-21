@@ -11,6 +11,7 @@ import { News } from './collections/News'
 import { FormSubmissions } from './collections/FormSubmissions'
 import { ChatSessions } from './collections/ChatSessions'
 import { EmailNotifications } from './collections/EmailNotifications'
+import { EmailDedupRecords } from './collections/EmailDedupRecords'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -22,7 +23,7 @@ export default buildConfig({
       titleSuffix: '- Tianrui Admin',
     },
   },
-  collections: [Users, Media, Products, News, FormSubmissions, ChatSessions, EmailNotifications],
+  collections: [Users, Media, Products, News, FormSubmissions, ChatSessions, EmailNotifications, EmailDedupRecords],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || 'tianrui-payload-secret-key-2024',
   typescript: {

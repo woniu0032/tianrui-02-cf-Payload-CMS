@@ -34,7 +34,9 @@ interface ImageTextBlock {
   blockType: 'imageText';
   image?: { url: string };
   title?: string;
+  titleEn?: string;
   content?: string;
+  contentEn?: string;
   imagePosition?: 'left' | 'right';
 }
 
@@ -46,23 +48,28 @@ interface VideoBlock {
 
 interface SpecTableRow {
   label: string;
+  labelEn?: string;
   value: string;
+  valueEn?: string;
 }
 
 interface SpecTableBlock {
   blockType: 'specTable';
   title?: string;
+  titleEn?: string;
   rows?: SpecTableRow[];
 }
 
 interface RichTextBlock {
   blockType: 'richText';
   content?: LexicalContent;
+  contentEn?: LexicalContent;
 }
 
 interface GalleryImage {
   image?: { url: string };
   caption?: string;
+  captionEn?: string;
 }
 
 interface GalleryBlock {
@@ -122,13 +129,15 @@ function LexicalRichText({ content }: { content?: LexicalContent }) {
 }
 
 // Block components
-function ImageTextBlockComponent({ block }: { block: ImageTextBlock }) {
+function ImageTextBlockComponent({ block, isZh }: { block: ImageTextBlock; isZh: boolean }) {
   const isLeft = block.imagePosition !== 'right';
+  const title = isZh ? block.title : (block.titleEn || block.title);
+  const content = isZh ? block.content : (block.contentEn || block.content);
   return (
     <div className={`grid md:grid-cols-2 gap-8 items-center ${isLeft ? '' : 'md:flex-row-reverse'}`}>
       <div className="aspect-video bg-slate-100 rounded-xl overflow-hidden">
         {block.image?.url ? (
-          <img src={block.image.url} alt={block.title || ''} className="w-full h-full object-cover" />
+          <img src={block.image.url} alt={title || ''} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-400">
             <ImageIcon className="w-12 h-12" />
@@ -136,8 +145,8 @@ function ImageTextBlockComponent({ block }: { block: ImageTextBlock }) {
         )}
       </div>
       <div>
-        {block.title && <h3 className="text-xl font-bold text-slate-900 mb-3">{block.title}</h3>}
-        {block.content && <p className="text-slate-600 leading-relaxed">{block.content}</p>}
+        {title && <h3 className="text-xl font-bold text-slate-900 mb-3">{title}</h3>}
+        {content && <p className="text-slate-600 leading-relaxed">{content}</p>}
       </div>
     </div>
   );
@@ -160,77 +169,81 @@ function VideoBlockComponent({ block }: { block: VideoBlock }) {
   );
 }
 
-function SpecTableBlockComponent({ block }: { block: SpecTableBlock }) {
+function SpecTableBlockComponent({ block, isZh }: { block: SpecTableBlock; isZh: boolean }) {
+  const title = isZh ? block.title : (block.titleEn || block.title);
   return (
     <div className="space-y-4">
-      {block.title && <h3 className="text-xl font-bold text-slate-900">{block.title}</h3>}
+      {title && <h3 className="text-xl font-bold text-slate-900">{title}</h3>}
       {block.rows && block.rows.length > 0 ? (
         <div className="border border-slate-200 rounded-xl overflow-hidden">
           <table className="w-full">
             <tbody>
               {block.rows.map((row, i) => (
                 <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                  <td className="px-6 py-3 font-medium text-slate-700 border-b border-slate-200 w-1/3">{row.label}</td>
-                  <td className="px-6 py-3 text-slate-600 border-b border-slate-200">{row.value}</td>
+                  <td className="px-6 py-3 font-medium text-slate-700 border-b border-slate-200 w-1/3">{isZh ? row.label : (row.labelEn || row.label)}</td>
+                  <td className="px-6 py-3 text-slate-600 border-b border-slate-200">{isZh ? row.value : (row.valueEn || row.value)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       ) : (
-        <p className="text-slate-400 italic">暂无参数数据</p>
+        <p className="text-slate-400 italic">{isZh ? '暂无参数数据' : 'No data available'}</p>
       )}
     </div>
   );
 }
 
-function RichTextBlockComponent({ block }: { block: RichTextBlock }) {
-  return <LexicalRichText content={block.content} />;
+function RichTextBlockComponent({ block, isZh }: { block: RichTextBlock; isZh: boolean }) {
+  return <LexicalRichText content={(isZh ? block.content : (block.contentEn || block.content))} />;
 }
 
-function GalleryBlockComponent({ block }: { block: GalleryBlock }) {
+function GalleryBlockComponent({ block, isZh }: { block: GalleryBlock; isZh: boolean }) {
   return (
     <div className="space-y-4">
       {block.images && block.images.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {block.images.map((img, i) => (
-            <div key={i} className="space-y-2">
-              <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden">
-                {img.image?.url ? (
-                  <img src={img.image.url} alt={img.caption || ''} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-400">
-                    <ImageIcon className="w-8 h-8" />
-                  </div>
-                )}
+          {block.images.map((img, i) => {
+            const caption = isZh ? img.caption : (img.captionEn || img.caption);
+            return (
+              <div key={i} className="space-y-2">
+                <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden">
+                  {img.image?.url ? (
+                    <img src={img.image.url} alt={caption || ''} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400">
+                      <ImageIcon className="w-8 h-8" />
+                    </div>
+                  )}
+                </div>
+                {caption && <p className="text-sm text-slate-500 text-center">{caption}</p>}
               </div>
-              {img.caption && <p className="text-sm text-slate-500 text-center">{img.caption}</p>}
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
-        <p className="text-slate-400 italic">暂无图片</p>
+        <p className="text-slate-400 italic">{isZh ? '暂无图片' : 'No images'}</p>
       )}
     </div>
   );
 }
 
-function LayoutBlocksRenderer({ blocks }: { blocks?: LayoutBlock[] }) {
+function LayoutBlocksRenderer({ blocks, isZh }: { blocks?: LayoutBlock[]; isZh: boolean }) {
   if (!blocks || blocks.length === 0) return null;
   return (
     <div className="space-y-12">
       {blocks.map((block, i) => {
         switch (block.blockType) {
           case 'imageText':
-            return <ImageTextBlockComponent key={i} block={block as ImageTextBlock} />;
+            return <ImageTextBlockComponent key={i} block={block as ImageTextBlock} isZh={isZh} />;
           case 'video':
             return <VideoBlockComponent key={i} block={block as VideoBlock} />;
           case 'specTable':
-            return <SpecTableBlockComponent key={i} block={block as SpecTableBlock} />;
+            return <SpecTableBlockComponent key={i} block={block as SpecTableBlock} isZh={isZh} />;
           case 'richText':
-            return <RichTextBlockComponent key={i} block={block as RichTextBlock} />;
+            return <RichTextBlockComponent key={i} block={block as RichTextBlock} isZh={isZh} />;
           case 'gallery':
-            return <GalleryBlockComponent key={i} block={block as GalleryBlock} />;
+            return <GalleryBlockComponent key={i} block={block as GalleryBlock} isZh={isZh} />;
           default:
             return null;
         }
@@ -242,7 +255,8 @@ function LayoutBlocksRenderer({ blocks }: { blocks?: LayoutBlock[] }) {
 export default function NewsDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
+  const isZh = language === 'zh';
   const [news, setNews] = useState<News | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -273,9 +287,9 @@ export default function NewsDetail() {
     return (
       <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-500">新闻未找到</p>
+          <p className="text-gray-500">{isZh ? '新闻未找到' : 'News not found'}</p>
           <button onClick={() => navigate('/news')} className="mt-4 text-blue-600 hover:underline">
-            返回新闻列表
+            {isZh ? '返回新闻列表' : 'Back to News'}
           </button>
         </div>
       </div>
@@ -283,8 +297,8 @@ export default function NewsDetail() {
   }
 
   const dateStr = news.publishedAt
-    ? new Date(news.publishedAt).toLocaleDateString('zh-CN')
-    : new Date(news.createdAt).toLocaleDateString('zh-CN');
+    ? new Date(news.publishedAt).toLocaleDateString(isZh ? 'zh-CN' : 'en-US')
+    : new Date(news.createdAt).toLocaleDateString(isZh ? 'zh-CN' : 'en-US');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -297,19 +311,19 @@ export default function NewsDetail() {
             className="flex items-center text-blue-200 hover:text-white mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            返回新闻列表
+            {isZh ? '返回新闻列表' : 'Back to News'}
           </motion.button>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-3xl md:text-4xl font-bold text-white mb-6"
           >
-            {news.title}
+            {isZh ? news.title : (news.titleEn || news.title)}
           </motion.h1>
           <div className="flex flex-wrap items-center gap-6 text-blue-200 text-sm">
             <span className="flex items-center"><Calendar className="w-4 h-4 mr-2" />{dateStr}</span>
-            <span className="flex items-center"><User className="w-4 h-4 mr-2" />{news.author || '管理员'}</span>
-            <span className="flex items-center"><Eye className="w-4 h-4 mr-2" />{news.viewCount || 0} 次阅读</span>
+            <span className="flex items-center"><User className="w-4 h-4 mr-2" />{news.author || (isZh ? '管理员' : 'Admin')}</span>
+            <span className="flex items-center"><Eye className="w-4 h-4 mr-2" />{news.viewCount || 0} {isZh ? '次阅读' : 'views'}</span>
             {news.category && <span className="bg-blue-800/50 px-3 py-1 rounded-full">{news.category}</span>}
           </div>
         </div>
@@ -329,26 +343,26 @@ export default function NewsDetail() {
         )}
 
         {/* Summary */}
-        {news.summary && (
+        {(isZh ? news.summary : (news.summaryEn || news.summary)) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
             className="mb-10 p-6 bg-blue-50 border-l-4 border-blue-500 rounded-r-xl"
           >
-            <p className="text-lg text-slate-700 leading-relaxed">{news.summary}</p>
+            <p className="text-lg text-slate-700 leading-relaxed">{isZh ? news.summary : (news.summaryEn || news.summary)}</p>
           </motion.div>
         )}
 
         {/* RichText Content */}
-        {news.content && (
+        {(isZh ? news.content : (news.contentEn || news.content)) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
             className="mb-12"
           >
-            <LexicalRichText content={news.content as unknown as LexicalContent} />
+            <LexicalRichText content={(isZh ? news.content : (news.contentEn || news.content)) as unknown as LexicalContent} />
           </motion.div>
         )}
 
@@ -360,7 +374,7 @@ export default function NewsDetail() {
             transition={{ delay: 0.3 }}
             className="mb-12"
           >
-            <LayoutBlocksRenderer blocks={news.layout as unknown as LayoutBlock[]} />
+            <LayoutBlocksRenderer blocks={news.layout as unknown as LayoutBlock[]} isZh={isZh} />
           </motion.div>
         )}
 

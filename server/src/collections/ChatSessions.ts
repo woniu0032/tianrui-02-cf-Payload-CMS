@@ -7,6 +7,7 @@ export const ChatSessions: CollectionConfig = {
     useAsTitle: 'sessionId',
     defaultColumns: ['sessionId', 'status', 'lastMessageAt', 'createdAt'],
     group: '数据管理',
+    description: '💬 客服工作台入口：https://api.hyfsad.com/chat-dashboard',
   },
   access: {
     read: () => true,
@@ -15,7 +16,7 @@ export const ChatSessions: CollectionConfig = {
   },
   hooks: {
     afterChange: [
-      async ({ doc, previousDoc }) => {
+      async ({ doc, previousDoc, req }) => {
         // 检测是否有新消息
         const currentMessages = doc.messages || []
         const previousMessages = previousDoc?.messages || []
@@ -28,12 +29,30 @@ export const ChatSessions: CollectionConfig = {
         // 只通知用户发送的消息（role === 'user'）
         if (lastMessage.role !== 'user') return
 
+        // 从请求中获取客户端 IP（按优先级尝试多个 header）
+        const forwardedFor = req.headers?.get('x-forwarded-for') as string
+        const realIp = req.headers?.get('x-real-ip') as string
+        const cfConnectingIp = req.headers?.get('cf-connecting-ip') as string
+
+        // Cloudflare 代理下，x-forwarded-for 可能包含多个 IP，取第一个
+        let clientIp: string | undefined
+        if (forwardedFor) {
+          clientIp = forwardedFor.split(',')[0].trim()
+        } else if (realIp) {
+          clientIp = realIp.trim()
+        } else if (cfConnectingIp) {
+          clientIp = cfConnectingIp.trim()
+        }
+
+        console.log(`[ChatSessions] Extracted clientIp: ${clientIp}, headers: x-forwarded-for=${!!forwardedFor}, x-real-ip=${!!realIp}, cf-connecting-ip=${!!cfConnectingIp}`)
+
         try {
           await sendChatNotification({
             sessionId: doc.sessionId,
             customerMessage: lastMessage.content,
             timestamp: lastMessage.timestamp,
             messageCount: currentMessages.length,
+            clientIp,
           })
         } catch (error) {
           console.error('[ChatSessions] Failed to send email notification:', error)
@@ -106,6 +125,14 @@ export const ChatSessions: CollectionConfig = {
       name: 'transferredAt',
       type: 'date',
       label: '转接时间',
+    },
+    {
+      name: 'pinnedAt',
+      type: 'date',
+      label: '置顶时间',
+      admin: {
+        description: '非空表示已置顶，按此字段降序排列',
+      },
     },
   ],
 }

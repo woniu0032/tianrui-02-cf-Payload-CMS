@@ -54,12 +54,29 @@ log_info "更新前 commit: ${OLD_COMMIT}"
 tar -czf "$BACKUP_FILE" --exclude=node_modules --exclude=.next --exclude=uploads -C /opt/tianrui-payload server
 log_info "已备份到: ${BACKUP_FILE}"
 
-# -------------------- 步骤 4: 拉取并强制对齐远程 --------------------
-git fetch origin "$BRANCH"
-git reset --hard "origin/${BRANCH}"
-log_info "已对齐到远程 ${BRANCH}"
+# -------------------- 步骤 4: 配置 sparse checkout（只拉取 server/ 目录）--------------------
+git config core.sparseCheckout true
+echo "server/*" > .git/info/sparse-checkout
 
-# -------------------- 步骤 5: 判断是否有更新 --------------------
+# -------------------- 步骤 5: 拉取并强制对齐远程 --------------------
+git fetch origin "$BRANCH"
+git read-tree -mu HEAD
+git reset --hard "origin/${BRANCH}"
+log_info "已对齐到远程 ${BRANCH} (sparse checkout: server/*)"
+
+# -------------------- 步骤 5.5: 将 server/ 子目录内容移到当前目录 --------------------
+if [ -d "server" ]; then
+  log_info "迁移 server/ 子目录内容到当前目录..."
+  # 删除当前目录的旧文件（保留 .git 和 .env）
+  find . -maxdepth 1 -not -name '.git' -not -name '.' -not -name '.env' -not -name 'node_modules' -exec rm -rf {} +
+  # 移动 server/ 内容
+  mv server/* .
+  mv server/.* . 2>/dev/null || true
+  rmdir server/ 2>/dev/null || true
+  log_info "server/ 目录内容已迁移"
+fi
+
+# -------------------- 步骤 6: 判断是否有更新 --------------------
 NEW_COMMIT="$(git rev-parse HEAD)"
 if [ "$OLD_COMMIT" = "$NEW_COMMIT" ]; then
   log_info "代码无更新，跳过构建"
@@ -68,27 +85,27 @@ if [ "$OLD_COMMIT" = "$NEW_COMMIT" ]; then
 fi
 log_info "检测到新 commit: ${NEW_COMMIT}"
 
-# -------------------- 步骤 6: 安装依赖 --------------------
+# -------------------- 步骤 7: 安装依赖 --------------------
 log_info "安装依赖 (pnpm install)..."
 pnpm install || { log_error "pnpm install 失败"; rollback; }
 
-# -------------------- 步骤 7: 生成 admin 组件映射（v3 必需）--------------------
+# -------------------- 步骤 8: 生成 admin 组件映射（v3 必需）--------------------
 log_info "生成 importmap (payload generate:importmap)..."
 pnpm payload generate:importmap || { log_error "generate:importmap 失败"; rollback; }
 
-# -------------------- 步骤 8: 生成类型定义 --------------------
+# -------------------- 步骤 9: 生成类型定义 --------------------
 log_info "生成类型 (payload generate:types)..."
 pnpm payload generate:types || { log_error "generate:types 失败"; rollback; }
 
-# -------------------- 步骤 9: 构建（next build）--------------------
+# -------------------- 步骤 10: 构建（next build）--------------------
 log_info "构建应用 (next build)..."
 NODE_OPTIONS='--max-old-space-size=2048 --no-deprecation' pnpm build || { log_error "next build 失败"; rollback; }
 
-# -------------------- 步骤 10: 重启 PM2 --------------------
+# -------------------- 步骤 11: 重启 PM2 --------------------
 log_info "重启 PM2 进程 ${PM2_NAME}..."
 pm2 restart "$PM2_NAME"
 
-# -------------------- 步骤 11: 健康检查 --------------------
+# -------------------- 步骤 12: 健康检查 --------------------
 log_info "等待服务启动..."
 sleep 6
 ADMIN_CODE="$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/admin || echo 000)"

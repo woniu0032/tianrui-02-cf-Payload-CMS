@@ -39,7 +39,7 @@ export default function Home() {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const shipImage = new URL('../../assets/船11.jpg', import.meta.url).href;
-  const factoryImage = new URL('../../assets/工厂全景科技图.png', import.meta.url).href;
+  const factoryImage = new URL('../../assets/工厂全景科技图_-_副本.webp', import.meta.url).href;
   const [hoveredCategory, setHoveredCategory] = React.useState<string | null>(null);
   const [hoverTimeout, setHoverTimeout] = React.useState<ReturnType<typeof setTimeout> | null>(null);
 
@@ -55,7 +55,7 @@ export default function Home() {
   const handleMouseLeave = () => {
     const timeout = setTimeout(() => {
       setHoveredCategory(null);
-    }, 450); // 450ms 延迟
+    }, 800); // 增加到800ms延迟，给用户更多时间移动鼠标
     setHoverTimeout(timeout);
   };
 
@@ -363,22 +363,35 @@ export default function Home() {
                       onMouseEnter={handleSubMenuMouseEnter}
                       onMouseLeave={handleSubMenuMouseLeave}
                     >
-                      {/* 透明桥接区域，消除主菜单和子菜单之间的间隙 */}
-                      <div className="h-4 w-full" />
+                      {/* 透明桥接区域 - 增加到48px确保鼠标平滑过渡 */}
+                      <div className="h-12 w-full" />
                       <div className="bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-2xl border-2 border-blue-300 py-3 -mt-2 animate-fadeIn">
                         <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-blue-50 border-t-2 border-l-2 border-blue-300 rotate-45"></div>
-                        {category.subMenuKeys!.map((subItemKey, subIdx) => (
-                          <div
-                            key={subIdx}
-                            onClick={() => navigate('/products')}
-                            className="relative px-4 py-2.5 text-sm font-medium text-blue-800 hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 cursor-pointer border-b border-blue-100 last:border-b-0"
-                          >
-                            <span className="flex items-center gap-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                              {t(subItemKey)}
-                            </span>
-                          </div>
-                        ))}
+                        {category.subMenuKeys!.map((subItemKey, subIdx) => {
+                          // 根据翻译键映射到对应的 dbCategory
+                          const categoryToDbMap: Record<string, string> = {
+                            'home.fabric.aramid': '芳纶',
+                            'home.fabric.finishedFR': '后整理阻燃',
+                            'home.fabric.waterproof': '防水面料',
+                            'home.fabric.oilproof': '防油面料',
+                            'home.fabric.stainresistant': '易去污面料',
+                            'home.fabric.t400': 'T400面料',
+                            'home.fabric.spandex': '氨纶面料',
+                          };
+                          const dbCategory = categoryToDbMap[subItemKey] || '';
+                          return (
+                            <div
+                              key={subIdx}
+                              onClick={() => navigate(`/products?category=${encodeURIComponent(dbCategory)}`)}
+                              className="relative px-4 py-2.5 text-sm font-medium text-blue-800 hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 cursor-pointer border-b border-blue-100 last:border-b-0"
+                            >
+                              <span className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                {t(subItemKey)}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -431,30 +444,6 @@ export default function Home() {
                 <div className="text-sm text-blue-600 mb-2">{item.date}</div>
                 <h3 className="font-semibold text-blue-900 mb-2 line-clamp-2">{t(item.titleKey)}</h3>
                 <p className="text-gray-600 text-sm">{t(item.summaryKey)}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Partners Section */}
-      <section className="py-20 bg-white" data-section-theme="light">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-center gap-3 mb-12">
-            <Users className="w-8 h-8 text-blue-600" />
-            <h2 className="text-3xl font-bold text-blue-900">{t('partners.title')}</h2>
-          </div>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-8">
-            {partners.map((partner, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="flex items-center justify-center h-20 bg-gray-100 rounded-lg"
-              >
-                <span className="text-gray-400 font-semibold">{partner}</span>
               </motion.div>
             ))}
           </div>

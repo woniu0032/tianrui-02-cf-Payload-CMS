@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "collectedAt": "2026-07-27T10:37:22.428Z",
+  "collectedAt": "2026-08-21T13:22:22.059Z",
   "hasDatabase": true,
   "secretNames": [
     "SUPABASE_ANON_KEY",
@@ -9,11 +9,5 @@
     "SUPABASE_URL",
     "SUPABASE_PUBLIC_URL",
     "MEOO_PROJECT_API_KEY"
-  ],
-  "authProviders": [
-    {
-      "provider": "password",
-      "configured": true
-    }
   ]
 }

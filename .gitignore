@@ -101,3 +101,22 @@ tmp/
 /core
 /.core.hmbtNy
 /.core.dump
+
+# ============================================
+# Meoo 平台项目导入/导出元数据（不提交到 Git）
+# 这些文件仅用于「导出 ZIP → 重新导入平台」流程
+# ============================================
+meoo-manifest.json
+.meoo-manifest.json
+meoo-cloud-snapshot.json
+.meoo-cloud-snapshot.json
+
+# ============================================
+# 沙箱运行时目录（平台自动生成，无需版本控制）
+# ============================================
+.microcompact/
+.plan/
+.todo/
+.websearch/
+.assets_mapping
+.gitkeep

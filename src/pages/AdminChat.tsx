@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  fetchChatSessions, 
+import {
+  fetchChatSessions,
   fetchChatSession,
   updateChatSession,
   logoutUser,
   isAuthenticated,
-  ChatSession 
+  ChatSession,
+  API_BASE_URL,
+  WS_BASE_URL
 } from '../services/api';
+import SessionListPanel from '../components/SessionListPanel';
 
 const AdminChat: React.FC = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -17,7 +20,9 @@ const AdminChat: React.FC = () => {
   const [replyInput, setReplyInput] = useState('');
   const [sending, setSending] = useState(false);
   const [filter, setFilter] = useState<'all' | 'active' | 'closed'>('all');
+  const [showSessionList, setShowSessionList] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
   const navigate = useNavigate();
 
   // 加载会话列表
@@ -49,17 +54,17 @@ const AdminChat: React.FC = () => {
     return () => clearInterval(interval);
   }, [loadSessions, navigate]);
 
-  // 选中会话时加载详情
+  // 选中会话时加载详情 + WebSocket 实时订阅
   useEffect(() => {
     if (!selectedId) {
       setSelectedSession(null);
       return;
     }
+
     const loadDetail = async () => {
       try {
         const session = sessions.find(s => s.id === selectedId);
         if (session) {
-          // 从列表中获取最新数据
           const detail = await fetchChatSession(session.sessionId);
           setSelectedSession(detail || session);
         }
@@ -67,10 +72,87 @@ const AdminChat: React.FC = () => {
         console.error('Failed to load session detail:', err);
       }
     };
+
     loadDetail();
-    // 轮询当前选中会话的新消息
-    const interval = setInterval(loadDetail, 3000);
-    return () => clearInterval(interval);
+
+    // WebSocket 实时订阅当前选中会话（带轮询降级）
+    let pollingInterval: NodeJS.Timeout | null = null;
+    let wsConnected = false;
+
+    const startPolling = () => {
+      console.log('[AdminChat] WebSocket unavailable, falling back to polling');
+      pollingInterval = setInterval(async () => {
+        try {
+          const session = await fetchChatSession(
+            sessions.find(s => s.id === selectedId)?.sessionId || ''
+          );
+          if (session && session.messages) {
+            setSelectedSession(prev => prev ? { ...prev, messages: session.messages } : null);
+            setSessions(prev => prev.map(s =>
+              s.id === selectedId ? { ...s, messages: session.messages } : s
+            ));
+          }
+        } catch (err) {
+          console.error('[AdminChat] Polling failed:', err);
+        }
+      }, 3000); // 每 3 秒轮询一次
+    };
+
+    const wsUrl = `${WS_BASE_URL}/api/chat-sessions/${selectedId}`;
+
+    try {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        console.log('[AdminChat] WebSocket connected');
+        wsConnected = true;
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.doc?.messages) {
+            setSelectedSession(prev => prev ? { ...prev, messages: data.doc.messages } : null);
+            // 同时更新列表中的消息预览
+            setSessions(prev => prev.map(s =>
+              s.id === selectedId ? { ...s, messages: data.doc.messages } : s
+            ));
+          }
+        } catch (err) {
+          console.error('[AdminChat] Failed to parse WebSocket message:', err);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.error('[AdminChat] WebSocket error:', err);
+        if (!wsConnected) {
+          startPolling();
+        }
+      };
+
+      ws.onclose = () => {
+        console.log('[AdminChat] WebSocket disconnected');
+        if (!wsConnected) {
+          startPolling();
+        }
+      };
+    } catch (err) {
+      console.error('[AdminChat] WebSocket creation failed:', err);
+      startPolling();
+    }
+
+    return () => {
+      if (wsRef.current) {
+        if (wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.close();
+        }
+        wsRef.current = null;
+      }
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
   }, [selectedId, sessions]);
 
   // 自动滚动到底部
@@ -98,9 +180,8 @@ const AdminChat: React.FC = () => {
         messages: allMessages,
         lastMessageAt: new Date().toISOString(),
       });
-      // 立即更新本地状态
-      setSelectedSession(prev => prev ? { ...prev, messages: allMessages, lastMessageAt: new Date().toISOString() } : null);
-      loadSessions(); // 刷新列表
+      // WebSocket 会自动推送更新，无需手动刷新
+      loadSessions(); // 仅刷新列表排序
     } catch (err) {
       console.error('Failed to send reply:', err);
       alert('回复发送失败，请重试');
@@ -183,7 +264,7 @@ const AdminChat: React.FC = () => {
 
       {/* 主体：左右分栏 */}
       <div className="flex-1 flex overflow-hidden max-w-[1600px] mx-auto w-full">
-        {/* 左侧会话列表 */}
+        {/* 左侧会话列表（移动端隐藏） */}
         <div className={`w-full md:w-80 lg:w-96 bg-white border-r flex flex-col flex-shrink-0 ${selectedId ? 'hidden md:flex' : 'flex'}`}>
           {/* 筛选 */}
           <div className="p-3 border-b flex gap-2">
@@ -255,23 +336,55 @@ const AdminChat: React.FC = () => {
             </div>
           ) : (
             <>
+              {/* 全局会话列表面板（可折叠） */}
+              {showSessionList && (
+                <SessionListPanel
+                  sessions={sessions}
+                  selectedId={selectedId}
+                  onSelectSession={(id) => {
+                    setSelectedId(id);
+                    setShowSessionList(false);
+                  }}
+                  onClose={() => setShowSessionList(false)}
+                />
+              )}
+
               {/* 会话信息栏 */}
               <div className="bg-white border-b p-4 flex justify-between items-center flex-shrink-0">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <button onClick={() => setSelectedId(null)} className="md:hidden text-gray-500 mr-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                    </button>
-                    <h2 className="font-semibold text-gray-900">会话 {selectedSession.sessionId.slice(0, 12)}...</h2>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      selectedSession.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                    }`}>
-                      {selectedSession.status === 'active' ? '活跃' : selectedSession.status === 'transferred' ? '已转接' : '已关闭'}
-                    </span>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setSelectedId(null)} className="md:hidden text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  {/* 切换会话按钮 */}
+                  <button
+                    onClick={() => setShowSessionList(!showSessionList)}
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-medium transition"
+                    title="查看全局会话列表"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="9" y1="3" x2="9" y2="21"></line>
+                    </svg>
+                    <span>会话列表</span>
+                    {sessions.filter(s => s.status === 'active').length > 0 && (
+                      <span className="ml-1 px-1.5 py-0.5 bg-blue-600 text-white text-xs rounded-full">
+                        {sessions.filter(s => s.status === 'active').length}
+                      </span>
+                    )}
+                  </button>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h2 className="font-semibold text-gray-900">会话 {selectedSession.sessionId.slice(0, 12)}...</h2>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        selectedSession.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {selectedSession.status === 'active' ? '活跃' : selectedSession.status === 'transferred' ? '已转接' : '已关闭'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      创建于 {new Date(selectedSession.createdAt).toLocaleString('zh-CN')} · {selectedSession.messages?.length || 0} 条消息
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    创建于 {new Date(selectedSession.createdAt).toLocaleString('zh-CN')} · {selectedSession.messages?.length || 0} 条消息
-                  </p>
                 </div>
                 <div className="flex gap-2">
                   {selectedSession.status === 'active' && (

@@ -33,12 +33,22 @@ const imageTextBlock: Block = {
     {
       name: 'title',
       type: 'text',
-      label: '标题',
+      label: '标题（中文）',
+    },
+    {
+      name: 'titleEn',
+      type: 'text',
+      label: 'Title (English)',
     },
     {
       name: 'content',
       type: 'textarea',
-      label: '文字内容',
+      label: '文字内容（中文）',
+    },
+    {
+      name: 'contentEn',
+      type: 'textarea',
+      label: 'Content (English)',
     },
     {
       name: 'imagePosition',
@@ -84,15 +94,22 @@ const specTableBlock: Block = {
     {
       name: 'title',
       type: 'text',
-      label: '表格标题',
+      label: '表格标题（中文）',
+    },
+    {
+      name: 'titleEn',
+      type: 'text',
+      label: 'Title (English)',
     },
     {
       name: 'rows',
       type: 'array',
       label: '表格行',
       fields: [
-        { name: 'label', type: 'text', label: '参数名', required: true },
-        { name: 'value', type: 'text', label: '参数值', required: true },
+        { name: 'label', type: 'text', label: '参数名（中文）', required: true },
+        { name: 'labelEn', type: 'text', label: 'Label (English)' },
+        { name: 'value', type: 'text', label: '参数值（中文）', required: true },
+        { name: 'valueEn', type: 'text', label: 'Value (English)' },
       ],
     },
   ],
@@ -108,7 +125,12 @@ const richTextBlock: Block = {
     {
       name: 'content',
       type: 'richText',
-      label: '内容',
+      label: '内容（中文）',
+    },
+    {
+      name: 'contentEn',
+      type: 'richText',
+      label: 'Content (English)',
     },
   ],
 }
@@ -135,7 +157,12 @@ const galleryBlock: Block = {
         {
           name: 'caption',
           type: 'text',
-          label: '说明文字',
+          label: '说明文字（中文）',
+        },
+        {
+          name: 'captionEn',
+          type: 'text',
+          label: 'Caption (English)',
         },
       ],
     },
@@ -156,14 +183,24 @@ export const Products: CollectionConfig = {
     {
       name: 'name',
       type: 'text',
-      label: '产品名称',
+      label: '产品名称（中文）',
       required: true,
       index: true,
     },
     {
+      name: 'nameEn',
+      type: 'text',
+      label: 'Product Name (English)',
+    },
+    {
       name: 'description',
       type: 'textarea',
-      label: '产品描述',
+      label: '产品描述（中文）',
+    },
+    {
+      name: 'descriptionEn',
+      type: 'textarea',
+      label: 'Description (English)',
     },
     {
       name: 'price',
@@ -200,7 +237,28 @@ export const Products: CollectionConfig = {
     {
       name: 'content',
       type: 'richText',
-      label: '富文本内容',
+      label: '产品介绍（中文）',
+      editor: lexicalEditor({
+        features: () => [
+          FixedToolbarFeature(),
+          InlineToolbarFeature(),
+          ParagraphFeature(),
+          HeadingFeature({ enabledHeadingSizes: ['h2', 'h3', 'h4'] }),
+          BoldFeature(),
+          ItalicFeature(),
+          UnderlineFeature(),
+          StrikethroughFeature(),
+          UnorderedListFeature(),
+          OrderedListFeature(),
+          LinkFeature(),
+          UploadFeature(),
+        ],
+      }),
+    },
+    {
+      name: 'contentEn',
+      type: 'richText',
+      label: '产品介绍 (English)',
       editor: lexicalEditor({
         features: () => [
           FixedToolbarFeature(),
@@ -234,42 +292,58 @@ export const Products: CollectionConfig = {
           type: 'array',
           label: '规格参数',
           fields: [
-            { name: 'label', type: 'text' },
-            { name: 'value', type: 'text' },
+            { name: 'label', type: 'text', label: '参数名（中文）' },
+            { name: 'labelEn', type: 'text', label: 'Label (English)' },
+            { name: 'value', type: 'text', label: '参数值（中文）' },
+            { name: 'valueEn', type: 'text', label: 'Value (English)' },
           ],
         },
         {
           name: 'materials',
           type: 'array',
           label: '材质',
-          fields: [{ name: 'item', type: 'text' }],
+          fields: [
+            { name: 'item', type: 'text', label: '材质（中文）' },
+            { name: 'itemEn', type: 'text', label: 'Item (English)' },
+          ],
         },
         {
           name: 'colors',
           type: 'array',
           label: '颜色',
-          fields: [{ name: 'item', type: 'text' }],
+          fields: [
+            { name: 'item', type: 'text', label: '颜色（中文）' },
+            { name: 'itemEn', type: 'text', label: 'Item (English)' },
+          ],
         },
         {
           name: 'features',
           type: 'array',
           label: '特点',
-          fields: [{ name: 'item', type: 'text' }],
+          fields: [
+            { name: 'item', type: 'text', label: '特点（中文）' },
+            { name: 'itemEn', type: 'text', label: 'Item (English)' },
+          ],
         },
         {
           name: 'techParams',
           type: 'array',
           label: '技术参数',
           fields: [
-            { name: 'label', type: 'text' },
-            { name: 'value', type: 'text' },
+            { name: 'label', type: 'text', label: '参数名（中文）' },
+            { name: 'labelEn', type: 'text', label: 'Label (English)' },
+            { name: 'value', type: 'text', label: '参数值（中文）' },
+            { name: 'valueEn', type: 'text', label: 'Value (English)' },
           ],
         },
         {
           name: 'applications',
           type: 'array',
           label: '应用场景',
-          fields: [{ name: 'item', type: 'text' }],
+          fields: [
+            { name: 'item', type: 'text', label: '场景（中文）' },
+            { name: 'itemEn', type: 'text', label: 'Item (English)' },
+          ],
         },
       ],
     },
