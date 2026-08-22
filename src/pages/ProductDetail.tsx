@@ -591,7 +591,7 @@ export default function ProductDetail() {
                 {/* 产品标签 */}
                 <div className="absolute top-4 left-4 flex gap-2">
                   <span className="px-3 py-1.5 bg-blue-600/90 backdrop-blur-sm text-white text-xs font-semibold rounded-lg shadow-sm">
-                    {isZh ? product.category : product.categoryEn}
+                    {isZh ? product.category : (product.categoryEn && product.categoryEn.length > 0 ? product.categoryEn : product.category)}
                   </span>
                 </div>
               </motion.div>
@@ -631,7 +631,7 @@ export default function ProductDetail() {
                   animate={{ opacity: 1, y: 0 }}
                   className="text-3xl lg:text-4xl font-bold text-slate-900 mb-3"
                 >
-                  {isZh ? product.name : product.nameEn}
+                  {isZh ? product.name : (product.nameEn && product.nameEn.length > 0 ? product.nameEn : product.name)}
                 </motion.h1>
                 <motion.p
                   initial={{ opacity: 0, y: 10 }}
@@ -639,7 +639,7 @@ export default function ProductDetail() {
                   transition={{ delay: 0.1 }}
                   className="text-slate-600 text-lg leading-relaxed"
                 >
-                  {isZh ? product.description : (product.descriptionEn || product.description)}
+                  {isZh ? product.description : (product.descriptionEn && product.descriptionEn.length > 0 ? product.descriptionEn : product.description)}
                 </motion.p>
               </div>
 
@@ -650,7 +650,7 @@ export default function ProductDetail() {
                 transition={{ delay: 0.2 }}
                 className="flex flex-wrap gap-2"
               >
-                {(isZh ? product.features : product.featuresEn).filter(Boolean).map((feature, i) => (
+                {(isZh ? product.features : (product.featuresEn && product.featuresEn.length > 0 ? product.featuresEn : product.features)).filter(Boolean).map((feature, i) => (
                   <span
                     key={i}
                     className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100 flex items-center gap-1"
@@ -679,8 +679,8 @@ export default function ProductDetail() {
                   <div className="space-y-0 divide-y divide-slate-100">
                     {product.specs.map((spec, i) => (
                       <div key={i} className="flex items-center justify-between py-3 table-row-hover px-2 -mx-2 rounded-lg">
-                        <span className="text-slate-500 text-sm">{isZh ? spec.label : (spec.labelEn || spec.label)}</span>
-                        <span className="font-semibold text-slate-900 text-sm">{isZh ? spec.value : (spec.valueEn || spec.value)}</span>
+                        <span className="text-slate-500 text-sm">{isZh ? spec.label : (spec.labelEn && spec.labelEn.length > 0 ? spec.labelEn : spec.label)}</span>
+                        <span className="font-semibold text-slate-900 text-sm">{isZh ? spec.value : (spec.valueEn && spec.valueEn.length > 0 ? spec.valueEn : spec.value)}</span>
                       </div>
                     ))}
                   </div>
@@ -702,7 +702,7 @@ export default function ProductDetail() {
                   <div className="flex flex-wrap gap-2">
                     {product.materials.map((material, i) => (
                       <span key={i} className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm border border-green-200">
-                        {isZh ? material.item : (material.itemEn || material.item)}
+                        {isZh ? material.item : (material.itemEn && material.itemEn.length > 0 ? material.itemEn : material.item)}
                       </span>
                     ))}
                   </div>
@@ -724,7 +724,7 @@ export default function ProductDetail() {
                   <div className="flex flex-wrap gap-2">
                     {product.colors.map((color, i) => (
                       <span key={i} className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm border border-purple-200">
-                        {isZh ? color.item : (color.itemEn || color.item)}
+                        {isZh ? color.item : (color.itemEn && color.itemEn.length > 0 ? color.itemEn : color.item)}
                       </span>
                     ))}
                   </div>
@@ -746,8 +746,8 @@ export default function ProductDetail() {
                   <div className="space-y-0 divide-y divide-slate-100">
                     {product.techParams.map((param, i) => (
                       <div key={i} className="flex items-center justify-between py-3 table-row-hover px-2 -mx-2 rounded-lg">
-                        <span className="text-slate-500 text-sm">{isZh ? param.label : (param.labelEn || param.label)}</span>
-                        <span className="font-semibold text-slate-900 text-sm">{isZh ? param.value : (param.valueEn || param.value)}</span>
+                        <span className="text-slate-500 text-sm">{isZh ? param.label : (param.labelEn && param.labelEn.length > 0 ? param.labelEn : param.label)}</span>
+                        <span className="font-semibold text-slate-900 text-sm">{isZh ? param.value : (param.valueEn && param.valueEn.length > 0 ? param.valueEn : param.value)}</span>
                       </div>
                     ))}
                   </div>
@@ -769,7 +769,7 @@ export default function ProductDetail() {
                   <div className="flex flex-wrap gap-2">
                     {product.applications.map((app, i) => (
                       <span key={i} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm border border-indigo-200">
-                        {isZh ? app.item : (app.itemEn || app.item)}
+                        {isZh ? app.item : (app.itemEn && app.itemEn.length > 0 ? app.itemEn : app.item)}
                       </span>
                     ))}
                   </div>
