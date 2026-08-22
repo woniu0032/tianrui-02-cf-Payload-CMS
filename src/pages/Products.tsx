@@ -39,6 +39,7 @@ interface Product {
   descriptionEn: string;
   price?: number;
   content?: LexicalContent;
+  contentEn?: LexicalContent;
   layout?: LayoutBlock[];
   attributes?: {
     specifications?: { label: string; value: string }[];
@@ -363,8 +364,9 @@ export default function Products() {
               description: item.description || '',
               descriptionEn: item.descriptionEn || item.description || '',
               price: item.price,
-              content: item.content,
-              layout: item.layout,
+          content: item.content,
+          contentEn: item.contentEn,
+          layout: item.layout,
               attributes: item.attributes,
             });
           }
