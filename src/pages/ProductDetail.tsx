@@ -12,11 +12,6 @@ interface ProductSpec {
   valueEn?: string;
 }
 
-interface ProductImage {
-  url: string;
-  type: 'main' | 'detail';
-}
-
 // Payload Lexical richText node types
 interface LexicalTextNode {
   type: 'text';
@@ -99,25 +94,28 @@ interface GalleryBlock {
 
 type LayoutBlock = ImageTextBlock | VideoBlock | SpecTableBlock | RichTextBlock | GalleryBlock;
 
+// 直接使用原始 API 数据结构（与 NewsDetail 一致）
 interface ProductData {
   id: string;
   name: string;
-  nameEn: string;
-  description: string;
-  descriptionEn: string;
-  image: string;
-  images: ProductImage[];
-  specs: ProductSpec[];
-  materials: { item: string; itemEn?: string }[];
-  colors: { item: string; itemEn?: string }[];
-  features: string[];
-  featuresEn: string[];
-  techParams: { label: string; labelEn?: string; value: string; valueEn?: string }[];
-  applications: { item: string; itemEn?: string }[];
+  nameEn?: string;
+  description?: string;
+  descriptionEn?: string;
+  coverImage?: { url: string };
+  images?: Array<{ image?: { url: string }; sortOrder?: number }>;
   category: string;
-  categoryEn: string;
+  categoryEn?: string;
   content?: LexicalContent;
+  contentEn?: LexicalContent;
   layout?: LayoutBlock[];
+  attributes?: {
+    specifications?: ProductSpec[];
+    materials?: Array<{ item: string; itemEn?: string }>;
+    colors?: Array<{ item: string; itemEn?: string }>;
+    features?: Array<{ item: string; itemEn?: string }>;
+    techParams?: Array<{ label: string; labelEn?: string; value: string; valueEn?: string }>;
+    applications?: Array<{ item: string; itemEn?: string }>;
+  };
 }
 
 const staticProducts = [
@@ -132,7 +130,6 @@ function renderLexicalNode(node: LexicalTextNode | LexicalElementNode): React.Re
     const textNode = node as LexicalTextNode;
     let content: React.ReactNode = textNode.text;
     
-    // Apply formatting based on format bitmask
     if (textNode.format & 1) content = <strong>{content}</strong>;
     if (textNode.format & 2) content = <em>{content}</em>;
     if (textNode.format & 4) content = <u>{content}</u>;
@@ -321,84 +318,17 @@ export default function ProductDetail() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [related, setRelated] = useState<any[]>([]);
 
-  // 从 Payload CMS 获取产品详情
+  // 从 Payload CMS 获取产品详情 — 直接存储原始 API 数据（与 NewsDetail 一致）
   useEffect(() => {
     async function fetchProduct() {
       if (!id) return;
 
       try {
-        // 尝试从 Payload CMS 获取
         const productData = await fetchProductById(id);
 
         if (productData) {
-          // 解析 Payload CMS 产品数据
-          const attributes = productData.attributes || {};
-
-          // 诊断日志：检查 API 返回的 attributes 是否包含英文字段
-          console.log('[ProductDetail] attributes keys:', Object.keys(attributes));
-          if (attributes.materials?.length) {
-            console.log('[ProductDetail] materials[0] sample:', JSON.stringify(attributes.materials[0]));
-          }
-          if (attributes.techParams?.length) {
-            console.log('[ProductDetail] techParams[0] sample:', JSON.stringify(attributes.techParams[0]));
-          }
-
-          const images: ProductImage[] = [];
-
-          // 处理图片数组
-          if (productData.images && Array.isArray(productData.images)) {
-            productData.images.forEach((img: any) => {
-              if (img?.image?.url) {
-                images.push({ url: img.image.url, type: img.sortOrder === 0 ? 'main' : 'detail' });
-              }
-            });
-          }
-
-          // 如果没有图片，使用主图
-          if (images.length === 0 && productData.coverImage?.url) {
-            images.push({ url: productData.coverImage.url, type: 'main' });
-          }
-
-          setProduct({
-            id: productData.id,
-            name: productData.name,
-            nameEn: productData.nameEn || '',
-            description: productData.description || '',
-            descriptionEn: productData.descriptionEn || '',
-            image: images[0]?.url || '',
-            images: images,
-            specs: (attributes.specifications || []).map((s: any) => ({
-              label: s.label || '',
-              labelEn: s.labelEn || '',
-              value: s.value || '',
-              valueEn: s.valueEn || '',
-            })),
-            materials: (attributes.materials || []).map((m: any) => ({
-              item: m.item || '',
-              itemEn: m.itemEn || '',
-            })),
-            colors: (attributes.colors || []).map((c: any) => ({
-              item: c.item || '',
-              itemEn: c.itemEn || '',
-            })),
-            features: attributes.features?.map((f: any) => f.item).filter(Boolean) || [],
-            featuresEn: attributes.features?.map((f: any) => f.itemEn || '').filter(Boolean) || [],
-            techParams: (attributes.techParams || []).map((t: any) => ({
-              label: t.label || '',
-              labelEn: t.labelEn || '',
-              value: t.value || '',
-              valueEn: t.valueEn || '',
-            })),
-            applications: (attributes.applications || []).map((a: any) => ({
-              item: a.item || '',
-              itemEn: a.itemEn || '',
-            })),
-            category: productData.category,
-            categoryEn: productData.categoryEn || '',
-            content: productData.content,
-            contentEn: productData.contentEn,
-            layout: productData.layout,
-          });
+          // 直接存储原始 API 数据，不做中间映射
+          setProduct(productData as ProductData);
 
           // 获取相关产品
           try {
@@ -423,8 +353,7 @@ export default function ProductDetail() {
             console.error('获取相关产品出错:', err);
           }
         } else {
-          // 如果 API 返回 null，使用静态数据
-          console.log('API 返回空数据，使用静态数据');
+          // API 返回 null，使用静态数据
           const staticProduct = staticProducts.find(p => p.id === id) || staticProducts[0];
           setProduct({
             id: staticProduct.id,
@@ -432,27 +361,26 @@ export default function ProductDetail() {
             nameEn: staticProduct.nameEn,
             description: staticProduct.desc,
             descriptionEn: staticProduct.descEn,
-            image: staticProduct.image,
-            images: [{ url: staticProduct.image, type: 'main' }],
-            specs: [
-              { label: '成分', labelEn: 'Composition', value: '100% Polyester' },
-              { label: '克重', labelEn: 'Weight', value: '180-220g/m²' },
-              { label: '幅宽', labelEn: 'Width', value: '150cm' },
-              { label: '认证', labelEn: 'Certification', value: 'ISO, OEKO-TEX' },
-            ],
-            materials: [],
-            colors: [],
-            features: ['阻燃', '耐高温', '环保'],
-            featuresEn: ['Flame Retardant', 'High Temp', 'Eco-friendly'],
-            techParams: [],
-            applications: [],
-            category: '阻燃面料',
+            category: staticProduct.category,
             categoryEn: 'Flame Retardant',
+            images: [],
+            attributes: {
+              specifications: [
+                { label: '成分', labelEn: 'Composition', value: '100% Polyester', valueEn: '100% Polyester' },
+                { label: '克重', labelEn: 'Weight', value: '180-220g/m²', valueEn: '180-220g/m²' },
+                { label: '幅宽', labelEn: 'Width', value: '150cm', valueEn: '150cm' },
+                { label: '认证', labelEn: 'Certification', value: 'ISO, OEKO-TEX', valueEn: 'ISO, OEKO-TEX' },
+              ],
+              features: [
+                { item: '阻燃', itemEn: 'Flame Retardant' },
+                { item: '耐高温', itemEn: 'High Temperature' },
+                { item: '环保', itemEn: 'Eco-friendly' },
+              ],
+            },
           });
         }
       } catch (err) {
         console.error('获取产品出错:', err);
-        // 出错时使用静态数据
         const staticProduct = staticProducts.find(p => p.id === id) || staticProducts[0];
         setProduct({
           id: staticProduct.id,
@@ -460,22 +388,22 @@ export default function ProductDetail() {
           nameEn: staticProduct.nameEn,
           description: staticProduct.desc,
           descriptionEn: staticProduct.descEn,
-          image: staticProduct.image,
-          images: [{ url: staticProduct.image, type: 'main' }],
-          specs: [
-            { label: '成分', labelEn: 'Composition', value: '100% Polyester' },
-            { label: '克重', labelEn: 'Weight', value: '180-220g/m²' },
-            { label: '幅宽', labelEn: 'Width', value: '150cm' },
-            { label: '认证', labelEn: 'Certification', value: 'ISO, OEKO-TEX' },
-          ],
-          materials: [],
-          colors: [],
-          features: ['阻燃', '耐高温', '环保'],
-          featuresEn: ['Flame Retardant', 'High Temp', 'Eco-friendly'],
-          techParams: [],
-          applications: [],
-          category: '阻燃面料',
+          category: staticProduct.category,
           categoryEn: 'Flame Retardant',
+          images: [],
+          attributes: {
+            specifications: [
+              { label: '成分', labelEn: 'Composition', value: '100% Polyester', valueEn: '100% Polyester' },
+              { label: '克重', labelEn: 'Weight', value: '180-220g/m²', valueEn: '180-220g/m²' },
+              { label: '幅宽', labelEn: 'Width', value: '150cm', valueEn: '150cm' },
+              { label: '认证', labelEn: 'Certification', value: 'ISO, OEKO-TEX', valueEn: 'ISO, OEKO-TEX' },
+            ],
+            features: [
+              { item: '阻燃', itemEn: 'Flame Retardant' },
+              { item: '耐高温', itemEn: 'High Temperature' },
+              { item: '环保', itemEn: 'Eco-friendly' },
+            ],
+          },
         });
       } finally {
         setLoading(false);
@@ -509,7 +437,18 @@ export default function ProductDetail() {
     );
   }
 
-  const allImages = product.images.length > 0 ? product.images : [{ url: product.image, type: 'main' }];
+  // 从原始 API 数据计算图片列表
+  const allImages: Array<{ url: string; type: string }> = [];
+  if (product.images && Array.isArray(product.images)) {
+    product.images.forEach((img) => {
+      if (img?.image?.url) {
+        allImages.push({ url: img.image.url, type: img.sortOrder === 0 ? 'main' : 'detail' });
+      }
+    });
+  }
+  if (allImages.length === 0 && product.coverImage?.url) {
+    allImages.push({ url: product.coverImage.url, type: 'main' });
+  }
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
@@ -518,6 +457,14 @@ export default function ProductDetail() {
   const prevImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
   };
+
+  // 从原始数据提取属性
+  const specs = product.attributes?.specifications || [];
+  const materials = product.attributes?.materials || [];
+  const colors = product.attributes?.colors || [];
+  const features = product.attributes?.features || [];
+  const techParams = product.attributes?.techParams || [];
+  const applications = product.attributes?.applications || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-20">
@@ -550,8 +497,8 @@ export default function ProductDetail() {
                 transition={{ duration: 0.5 }}
               >
                 <img
-                  src={allImages[currentImageIndex]?.url || product.image}
-                  alt={isZh ? product.name : product.nameEn}
+                  src={allImages[currentImageIndex]?.url || product.coverImage?.url || ''}
+                  alt={isZh ? product.name : (product.nameEn || product.name)}
                   className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/img:scale-105"
                 />
 
@@ -591,7 +538,7 @@ export default function ProductDetail() {
                 {/* 产品标签 */}
                 <div className="absolute top-4 left-4 flex gap-2">
                   <span className="px-3 py-1.5 bg-blue-600/90 backdrop-blur-sm text-white text-xs font-semibold rounded-lg shadow-sm">
-                    {isZh ? product.category : (product.categoryEn && product.categoryEn.length > 0 ? product.categoryEn : product.category)}
+                    {isZh ? product.category : (product.categoryEn || product.category)}
                   </span>
                 </div>
               </motion.div>
@@ -613,7 +560,7 @@ export default function ProductDetail() {
                     >
                       <img
                         src={img.url}
-                        alt={`${isZh ? product.name : product.nameEn} ${idx + 1}`}
+                        alt={`${isZh ? product.name : (product.nameEn || product.name)} ${idx + 1}`}
                         className="w-full h-full object-cover"
                       />
                     </motion.button>
@@ -631,7 +578,7 @@ export default function ProductDetail() {
                   animate={{ opacity: 1, y: 0 }}
                   className="text-3xl lg:text-4xl font-bold text-slate-900 mb-3"
                 >
-                  {isZh ? product.name : (product.nameEn && product.nameEn.length > 0 ? product.nameEn : product.name)}
+                  {isZh ? product.name : (product.nameEn || product.name)}
                 </motion.h1>
                 <motion.p
                   initial={{ opacity: 0, y: 10 }}
@@ -639,33 +586,38 @@ export default function ProductDetail() {
                   transition={{ delay: 0.1 }}
                   className="text-slate-600 text-lg leading-relaxed"
                 >
-                  {isZh ? product.description : (product.descriptionEn && product.descriptionEn.length > 0 ? product.descriptionEn : product.description)}
+                  {isZh ? product.description : (product.descriptionEn || product.description)}
                 </motion.p>
               </div>
 
               {/* 功能特性标签 */}
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex flex-wrap gap-2"
-              >
-                {(isZh ? product.features : (product.featuresEn && product.featuresEn.length > 0 ? product.featuresEn : product.features)).filter(Boolean).map((feature, i) => (
-                  <span
-                    key={i}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100 flex items-center gap-1"
-                  >
-                    {feature.includes('阻燃') || feature.includes('Flame') ? <Flame className="w-3 h-3" /> :
-                     feature.includes('防水') || feature.includes('Water') ? <Droplets className="w-3 h-3" /> :
-                     feature.includes('静电') || feature.includes('Static') ? <Zap className="w-3 h-3" /> :
-                     <Shield className="w-3 h-3" />}
-                    {feature}
-                  </span>
-                ))}
-              </motion.div>
+              {features.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex flex-wrap gap-2"
+                >
+                  {features.map((f, i) => {
+                    const text = isZh ? f.item : (f.itemEn || f.item);
+                    return (
+                      <span
+                        key={i}
+                        className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100 flex items-center gap-1"
+                      >
+                        {text.includes('阻燃') || text.includes('Flame') ? <Flame className="w-3 h-3" /> :
+                         text.includes('防水') || text.includes('Water') ? <Droplets className="w-3 h-3" /> :
+                         text.includes('静电') || text.includes('Static') ? <Zap className="w-3 h-3" /> :
+                         <Shield className="w-3 h-3" />}
+                        {text}
+                      </span>
+                    );
+                  })}
+                </motion.div>
+              )}
 
               {/* 产品参数 */}
-              {product.specs.length > 0 && (
+              {specs.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -677,10 +629,10 @@ export default function ProductDetail() {
                     {t('productDetail.specs')}
                   </h3>
                   <div className="space-y-0 divide-y divide-slate-100">
-                    {product.specs.map((spec, i) => (
+                    {specs.map((spec, i) => (
                       <div key={i} className="flex items-center justify-between py-3 table-row-hover px-2 -mx-2 rounded-lg">
-                        <span className="text-slate-500 text-sm">{isZh ? spec.label : (spec.labelEn && spec.labelEn.length > 0 ? spec.labelEn : spec.label)}</span>
-                        <span className="font-semibold text-slate-900 text-sm">{isZh ? spec.value : (spec.valueEn && spec.valueEn.length > 0 ? spec.valueEn : spec.value)}</span>
+                        <span className="text-slate-500 text-sm">{isZh ? spec.label : (spec.labelEn || spec.label)}</span>
+                        <span className="font-semibold text-slate-900 text-sm">{isZh ? spec.value : (spec.valueEn || spec.value)}</span>
                       </div>
                     ))}
                   </div>
@@ -688,7 +640,7 @@ export default function ProductDetail() {
               )}
 
               {/* 材质成分 */}
-              {product.materials.length > 0 && (
+              {materials.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -700,9 +652,9 @@ export default function ProductDetail() {
                     {isZh ? '材质成分' : 'Materials'}
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {product.materials.map((material, i) => (
+                    {materials.map((m, i) => (
                       <span key={i} className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm border border-green-200">
-                        {isZh ? material.item : (material.itemEn && material.itemEn.length > 0 ? material.itemEn : material.item)}
+                        {isZh ? m.item : (m.itemEn || m.item)}
                       </span>
                     ))}
                   </div>
@@ -710,7 +662,7 @@ export default function ProductDetail() {
               )}
 
               {/* 颜色选项 */}
-              {product.colors.length > 0 && (
+              {colors.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -722,9 +674,9 @@ export default function ProductDetail() {
                     {isZh ? '颜色选项' : 'Colors'}
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {product.colors.map((color, i) => (
+                    {colors.map((c, i) => (
                       <span key={i} className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm border border-purple-200">
-                        {isZh ? color.item : (color.itemEn && color.itemEn.length > 0 ? color.itemEn : color.item)}
+                        {isZh ? c.item : (c.itemEn || c.item)}
                       </span>
                     ))}
                   </div>
@@ -732,7 +684,7 @@ export default function ProductDetail() {
               )}
 
               {/* 技术参数 */}
-              {product.techParams.length > 0 && (
+              {techParams.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -744,10 +696,10 @@ export default function ProductDetail() {
                     {isZh ? '技术参数' : 'Technical Parameters'}
                   </h3>
                   <div className="space-y-0 divide-y divide-slate-100">
-                    {product.techParams.map((param, i) => (
+                    {techParams.map((param, i) => (
                       <div key={i} className="flex items-center justify-between py-3 table-row-hover px-2 -mx-2 rounded-lg">
-                        <span className="text-slate-500 text-sm">{isZh ? param.label : (param.labelEn && param.labelEn.length > 0 ? param.labelEn : param.label)}</span>
-                        <span className="font-semibold text-slate-900 text-sm">{isZh ? param.value : (param.valueEn && param.valueEn.length > 0 ? param.valueEn : param.value)}</span>
+                        <span className="text-slate-500 text-sm">{isZh ? param.label : (param.labelEn || param.label)}</span>
+                        <span className="font-semibold text-slate-900 text-sm">{isZh ? param.value : (param.valueEn || param.value)}</span>
                       </div>
                     ))}
                   </div>
@@ -755,7 +707,7 @@ export default function ProductDetail() {
               )}
 
               {/* 应用领域 */}
-              {product.applications.length > 0 && (
+              {applications.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -767,9 +719,9 @@ export default function ProductDetail() {
                     {isZh ? '应用领域' : 'Applications'}
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {product.applications.map((app, i) => (
+                    {applications.map((a, i) => (
                       <span key={i} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm border border-indigo-200">
-                        {isZh ? app.item : (app.itemEn && app.itemEn.length > 0 ? app.itemEn : app.item)}
+                        {isZh ? a.item : (a.itemEn || a.item)}
                       </span>
                     ))}
                   </div>
