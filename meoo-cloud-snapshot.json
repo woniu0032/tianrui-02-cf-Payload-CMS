@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "collectedAt": "2026-08-21T13:22:22.059Z",
+  "collectedAt": "2026-08-22T14:46:08.979Z",
   "hasDatabase": true,
   "secretNames": [
     "SUPABASE_ANON_KEY",
@@ -9,5 +9,12 @@
     "SUPABASE_URL",
     "SUPABASE_PUBLIC_URL",
     "MEOO_PROJECT_API_KEY"
+  ],
+  "storageBuckets": [
+    {
+      "id": "products",
+      "name": "products",
+      "public": true
+    }
   ]
 }
