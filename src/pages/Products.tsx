@@ -708,8 +708,8 @@ export default function Products() {
                           <div className="space-y-2">
                             {selectedProduct.attributes.specifications.map((spec, i) => (
                               <div key={i} className="flex justify-between py-2 border-b border-gray-100">
-                                <span className="text-gray-500">{spec.label}</span>
-                                <span className="font-medium text-gray-900">{spec.value}</span>
+                                <span className="text-gray-500">{isZh ? spec.label : (spec.labelEn || spec.label)}</span>
+                                <span className="font-medium text-gray-900">{isZh ? spec.value : (spec.valueEn || spec.value)}</span>
                               </div>
                             ))}
                           </div>
@@ -725,7 +725,7 @@ export default function Products() {
                           <div className="flex flex-wrap gap-2">
                             {selectedProduct.attributes.materials.map((m, i) => (
                               <span key={i} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                                {m.item}
+                                {isZh ? m.item : (m.itemEn || m.item)}
                               </span>
                             ))}
                           </div>
@@ -741,7 +741,7 @@ export default function Products() {
                           <div className="flex flex-wrap gap-2">
                             {selectedProduct.attributes.colors.map((c, i) => (
                               <span key={i} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
-                                {c.item}
+                                {isZh ? c.item : (c.itemEn || c.item)}
                               </span>
                             ))}
                           </div>
@@ -757,7 +757,7 @@ export default function Products() {
                           <div className="flex flex-wrap gap-2">
                             {selectedProduct.attributes.features.map((f, i) => (
                               <span key={i} className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm">
-                                {f.item}
+                                {isZh ? f.item : (f.itemEn || f.item)}
                               </span>
                             ))}
                           </div>
@@ -773,8 +773,8 @@ export default function Products() {
                           <div className="space-y-2">
                             {selectedProduct.attributes.techParams.map((tp, i) => (
                               <div key={i} className="flex justify-between py-2 border-b border-gray-100">
-                                <span className="text-gray-500">{tp.label}</span>
-                                <span className="font-medium text-gray-900">{tp.value}</span>
+                                <span className="text-gray-500">{isZh ? tp.label : (tp.labelEn || tp.label)}</span>
+                                <span className="font-medium text-gray-900">{isZh ? tp.value : (tp.valueEn || tp.value)}</span>
                               </div>
                             ))}
                           </div>
@@ -791,7 +791,7 @@ export default function Products() {
                             {selectedProduct.attributes.applications.map((app, i) => (
                               <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                {app.item}
+                                {isZh ? app.item : (app.itemEn || app.item)}
                               </div>
                             ))}
                           </div>
@@ -801,25 +801,28 @@ export default function Products() {
                   )}
 
                   {/* 富文本内容 */}
-                  {selectedProduct.content?.root?.children && selectedProduct.content.root.children.length > 0 && (
-                    <div className="mb-6">
-                      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
-                        {isZh ? '产品介绍' : 'Description'}
-                      </h3>
-                      <div className="prose prose-sm max-w-none text-gray-600">
-                        {selectedProduct.content.root.children.map((node: any, i: number) => {
-                          if (node.type === 'paragraph') {
-                            return <p key={i} className="mb-2 last:mb-0">{node.children?.map((c: any) => c.text).join('')}</p>;
-                          }
-                          if (node.type === 'heading') {
-                            const Tag = node.tag || 'h3';
-                            return <Tag key={i} className="font-bold mb-2">{node.children?.map((c: any) => c.text).join('')}</Tag>;
-                          }
-                          return null;
-                        })}
+                  {(() => {
+                    const descContent = isZh ? selectedProduct.content : (selectedProduct.contentEn || selectedProduct.content);
+                    return descContent?.root?.children && descContent.root.children.length > 0 ? (
+                      <div className="mb-6">
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+                          {isZh ? '产品介绍' : 'Description'}
+                        </h3>
+                        <div className="prose prose-sm max-w-none text-gray-600">
+                          {descContent.root.children.map((node: any, i: number) => {
+                            if (node.type === 'paragraph') {
+                              return <p key={i} className="mb-2 last:mb-0">{node.children?.map((c: any) => c.text).join('')}</p>;
+                            }
+                            if (node.type === 'heading') {
+                              const Tag = node.tag || 'h3';
+                              return <Tag key={i} className="font-bold mb-2">{node.children?.map((c: any) => c.text).join('')}</Tag>;
+                            }
+                            return null;
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    ) : null;
+                  })()}
 
                   {/* Layout Blocks */}
                   {selectedProduct.layout && selectedProduct.layout.length > 0 && (
@@ -829,11 +832,11 @@ export default function Products() {
                           return (
                             <div key={i} className="grid grid-cols-2 gap-4 items-center">
                               <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                                {block.image?.url && <img src={block.image.url} alt={block.title || ''} className="w-full h-full object-cover" />}
+                                {block.image?.url && <img src={block.image.url} alt={isZh ? (block.title || '') : (block.titleEn || block.title || '')} className="w-full h-full object-cover" />}
                               </div>
                               <div>
-                                {block.title && <h4 className="font-semibold text-gray-900 mb-1">{block.title}</h4>}
-                                {block.content && <p className="text-sm text-gray-600">{block.content}</p>}
+                                {(isZh ? block.title : (block.titleEn || block.title)) && <h4 className="font-semibold text-gray-900 mb-1">{isZh ? block.title : (block.titleEn || block.title)}</h4>}
+                                {(isZh ? block.content : (block.contentEn || block.content)) && <p className="text-sm text-gray-600">{isZh ? block.content : (block.contentEn || block.content)}</p>}
                               </div>
                             </div>
                           );
@@ -841,14 +844,14 @@ export default function Products() {
                         if (block.blockType === 'specTable') {
                           return (
                             <div key={i}>
-                              {block.title && <h4 className="font-semibold text-gray-900 mb-2">{block.title}</h4>}
+                              {(isZh ? block.title : (block.titleEn || block.title)) && <h4 className="font-semibold text-gray-900 mb-2">{isZh ? block.title : (block.titleEn || block.title)}</h4>}
                               {block.rows && block.rows.length > 0 && (
                                 <table className="w-full text-sm">
                                   <tbody>
                                     {block.rows.map((row: any, ri: number) => (
                                       <tr key={ri} className={ri % 2 === 0 ? 'bg-gray-50' : ''}>
-                                        <td className="px-3 py-2 font-medium text-gray-700">{row.label}</td>
-                                        <td className="px-3 py-2 text-gray-600">{row.value}</td>
+                                        <td className="px-3 py-2 font-medium text-gray-700">{isZh ? row.label : (row.labelEn || row.label)}</td>
+                                        <td className="px-3 py-2 text-gray-600">{isZh ? row.value : (row.valueEn || row.value)}</td>
                                       </tr>
                                     ))}
                                   </tbody>
@@ -858,9 +861,10 @@ export default function Products() {
                           );
                         }
                         if (block.blockType === 'richText') {
+                          const rtContent = isZh ? block.content : (block.contentEn || block.content);
                           return (
                             <div key={i} className="prose prose-sm max-w-none text-gray-600">
-                              {block.content?.root?.children?.map((node: any, ni: number) => {
+                              {rtContent?.root?.children?.map((node: any, ni: number) => {
                                 if (node.type === 'paragraph') {
                                   return <p key={ni} className="mb-2">{node.children?.map((c: any) => c.text).join('')}</p>;
                                 }
@@ -874,7 +878,7 @@ export default function Products() {
                             <div key={i} className="grid grid-cols-3 gap-2">
                               {block.images?.map((img: any, gi: number) => (
                                 <div key={gi} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                                  {img.image?.url && <img src={img.image.url} alt={img.caption || ''} className="w-full h-full object-cover" />}
+                                  {img.image?.url && <img src={img.image.url} alt={isZh ? (img.caption || '') : (img.captionEn || img.caption || '')} className="w-full h-full object-cover" />}
                                 </div>
                               ))}
                             </div>
